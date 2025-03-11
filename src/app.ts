@@ -7,5 +7,5 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-app.use("/tintimWebhook", tintimWebhookRoutes);
+app.use("/", tintimWebhookRoutes);
 export default app;

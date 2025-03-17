@@ -6,7 +6,6 @@ import { getClientesTintim } from "../config/database";
 
 const router = Router();
 
-
 const clientes = await getClientesTintim();
 
 const cliente = new ClienteModel(
@@ -23,6 +22,7 @@ clientes.forEach((cliente) => {
       //   req,
       //   res
       // );
+     
 
       res.status(200).json({ message: "✅ Webhook recebido com sucesso!!!!" });
     } catch (error) {

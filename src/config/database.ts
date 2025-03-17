@@ -1,5 +1,6 @@
 import pkg from "pg";
 import dotenv from "dotenv";
+import CryptoJS from "crypto-js";
 dotenv.config();
 const { Pool } = pkg;
 
@@ -10,6 +11,10 @@ const pool = new Pool({
   password: process.env.DB_PASSWORD,
   port: parseInt(process.env.DB_PORT || "5432", 10),
 });
+function descriptografarToken(token: string): string {
+  const secretKey = process.env.SECRET_KEY as string;
+  return CryptoJS.AES.decrypt(token, secretKey).toString(CryptoJS.enc.Utf8);
+}
 
 export const db = async (text: string, params?: any[]) => {
   const client = await pool.connect();
@@ -22,5 +27,13 @@ export const db = async (text: string, params?: any[]) => {
 };
 
 export const getClientesTintim = async () => {
-  return await db("SELECT nome,token FROM clientes where tintim = true");
+  const response = await db(
+    "SELECT nome,token FROM clientes where tintim = true"
+  );
+  return response.map((cliente) => {
+    return {
+      nome: cliente.nome,
+      token: descriptografarToken(cliente.token),
+    };
+  });
 };

@@ -43,7 +43,7 @@ export class TintimWebhookController {
       campaing_name = "sem informação",
       adset_name = "sem informação",
       ad_name = "sem informação",
-    } = webhookData?.lead?.ad || {};
+    } = webhookData?.ad || {};
 
     const lead = await this.buscarLeadComTentativas(telefone);
 

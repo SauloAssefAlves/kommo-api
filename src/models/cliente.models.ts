@@ -61,7 +61,32 @@ export class ClienteModel {
       return null;
     }
   }
+  async buscarLeadPorTelefone(telefone: string): Promise<any | null> {
+    try {
+      const formattedPhone = telefone.replace(/^55/, "").replace(/^\+/, "");
+      const response = await this.api.get(`/contacts`, {
+        params: {
+          query: formattedPhone,
+          with: "leads",
+        },
+      });
+      const contatos = response.data._embedded?.contacts[0];
 
+      if (!contatos) {
+        console.log("❌ Contato não encontrado");
+        return null;
+      }
+      if (contatos._embedded?.leads?.length > 0) {
+        const leadId = contatos._embedded.leads[0].id;
+        return await this.buscarLeadPorId(leadId);
+      }
+
+      return null;
+    } catch (error) {
+      console.error("Erro ao buscar contato por telefone:", error);
+      return null;
+    }
+  }
   async buscarIdsPorNomesCampos(
     campos: { nomeCampo: string; enumNome?: string }[]
   ): Promise<

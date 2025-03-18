@@ -61,38 +61,13 @@ export class ClienteModel {
       return null;
     }
   }
-  async buscarLeadPorTelefone(telefone: string): Promise<any | null> {
-    try {
-      const formattedPhone = telefone.replace(/^55/, "").replace(/^\+/, "");
-      const response = await this.api.get(`/contacts`, {
-        params: {
-          query: formattedPhone,
-          with: "leads",
-        },
-      });
-      const contatos = response.data._embedded?.contacts[0];
 
-      if (!contatos) {
-        console.log("❌ Contato não encontrado");
-        return null;
-      }
-      if (contatos._embedded?.leads?.length > 0) {
-        const leadId = contatos._embedded.leads[0].id;
-        return await this.buscarLeadPorId(leadId);
-      }
-
-      return null;
-    } catch (error) {
-      console.error("Erro ao buscar contato por telefone:", error);
-      return null;
-    }
-  }
   async buscarIdsPorNomesCampos(
     campos: { nomeCampo: string; enumNome?: string }[]
   ): Promise<
     {
-      enumNome: any;
-      enumId: any;
+      enumNome?: string;
+      enumId?: number;
       type: string;
       nome: string;
       id: number;
@@ -102,7 +77,8 @@ export class ClienteModel {
       const response = await this.api.get("/leads/custom_fields");
 
       if (!response.data?._embedded?.custom_fields) {
-        throw new Error("❌ Nenhum campo personalizado encontrado.");
+        console.warn("⚠️ Nenhum campo personalizado encontrado.");
+        return [];
       }
 
       const camposMap = new Map(campos.map((c) => [c.nomeCampo, c.enumNome]));
@@ -118,29 +94,29 @@ export class ClienteModel {
               type: campo.type,
             };
           }
+
           // Buscar o ID do enum correspondente, se houver
           let enumId;
           if (campo.enums && enumNome) {
             const enumEncontrado = campo.enums.find(
               (e: any) => e.value === enumNome
             );
-            enumId = enumEncontrado ? enumEncontrado.id : undefined;
+            enumId = enumEncontrado?.id; // Se não encontrar, enumId fica `undefined`
           }
 
           return {
             nome: campo.name,
             id: campo.id,
-            enumId,
+            enumId: enumId ?? null, // Retorna `null` se não houver enum correspondente
             type: campo.type,
             enumNome,
-            // Adiciona o ID do enum se encontrado
           };
         });
 
       return camposEncontrados;
     } catch (error) {
-      console.error("Erro ao buscar IDs dos campos:", error);
-      return [];
+      console.error("❌ Erro ao buscar IDs dos campos:", error);
+      return []; // Retorna um array vazio em caso de erro
     }
   }
   async adicionarTask({

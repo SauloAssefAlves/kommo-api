@@ -15,15 +15,15 @@ const cliente = new ClienteModel(
 
 clientes.forEach((cliente) => {
   const clienteModel = new ClienteModel(cliente.nome, cliente.token);
-  console.log("🔍 Cliente:", cliente.nome);
+
   router.post(`/${cliente.nome}`, async (req: Request, res: Response) => {
     try {
-      // await new TintimWebhookController(clienteModel).atualizarFiledsWebhookTintim(
-      //   req,
-      //   res
-      // );
+      await new TintimWebhookController(clienteModel).atualizarFiledsWebhookTintim(
+        req,
+        res
+      );
      
-
+      console.log("🔍 Cliente:", cliente.nome);
       res.status(200).json({ message: "✅ Webhook recebido com sucesso!!!!" });
     } catch (error) {
       console.error("❌ Erro ao buscar clientes:", error);

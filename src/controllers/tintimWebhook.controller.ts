@@ -33,11 +33,11 @@ export class TintimWebhookController {
 
   public async atualizarFiledsWebhookTintim(req: Request, res: Response) {
     const webhookData = req.body;
-    console.log(req.body)
+    console.log(req.body);
     const evoUser = await this.clienteModel.buscarUsuarioPorNome("EVO Result");
     const telefone = webhookData?.phone;
 
-    const { source } = webhookData?.lead;
+    const source = webhookData?.source;
 
     const {
       campaing_name = "sem informação",

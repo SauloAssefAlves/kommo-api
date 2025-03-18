@@ -72,7 +72,6 @@ export class TintimWebhookController {
     ];
     const camposPersonalizados =
       await this.clienteModel.buscarIdsPorNomesCampos(camposNames);
-    console.log("🔍 Campos personalizados:", evoUser.id);
     const body = {
       custom_fields_values: camposPersonalizados.map((campo) => {
         let fieldValue: any;
@@ -112,6 +111,7 @@ export class TintimWebhookController {
     try {
       // atualizando campos do lead
       await this.clienteModel.api.patch(`/leads/${lead.id}`, body);
+      console.log("LEAD ATUALIZADO COM SUCESSO", lead.id, lead.name);
       //criando task
       await this.clienteModel.adicionarTask({
         text: "Lead de ads",

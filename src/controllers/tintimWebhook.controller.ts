@@ -6,13 +6,41 @@ export class TintimWebhookController {
     this.clienteModel = clienteModel;
   }
 
+  private async buscarLeadComTentativas(telefone: string): Promise<any> {
+    // Delays em milissegundos para cada tentativa
+    const delays = [300, 5000, 10000]; // 300ms para a primeira tentativa, e 2000ms para as 2 tentativas seguintes.
+
+    for (let i = 0; i < delays.length; i++) {
+      const lead = await this.clienteModel.buscarLeadPorTelefone(telefone);
+
+      if (lead) {
+        return lead; // Se encontrar o lead, retorna.
+      }
+
+      // Se não encontrou e não é a última tentativa, aguarda o delay.
+      if (i < delays.length - 1) {
+        console.log(
+          `🕒 Tentativa ${i + 1} de ${delays.length} - Aguardando ${
+            delays[i]
+          }ms...`
+        );
+        await new Promise((resolve) => setTimeout(resolve, delays[i])); // Delay em milissegundos
+      }
+    }
+
+    return null; // Se não encontrar nada após as tentativas, retorna null
+  }
+
   public async atualizarFiledsWebhookTintim(req: Request, res: Response) {
     const webhookData = req.body;
     const evoUser = await this.clienteModel.buscarUsuarioPorNome("EVO Result");
     const telefone = webhookData?.lead.phone;
+
     const { source } = webhookData?.lead;
-    const { campaing_name, adset_name, ad_name } = webhookData?.lead.ad;
-    const lead = await this.clienteModel.buscarLeadPorTelefone(telefone);
+    const { campaing_name, adset_name, ad_name } = webhookData?.lead?.ad;
+
+    const lead = await this.buscarLeadComTentativas(telefone);
+
     const camposNames = [
       { nomeCampo: "Origem", enumNome: "WhatsApp" /* source */ },
       { nomeCampo: "Midia", enumNome: "Facebook ADS" },
@@ -56,11 +84,11 @@ export class TintimWebhookController {
           fieldValue = { value: Math.floor(Date.now() / 1000) }; // Timestamp em segundos
         } else {
           if (campo.nome === "Campanha (1° Impacto)") {
-            fieldValue = { value: campaing_name };
+            fieldValue = { value: campaing_name || "Sem nome" };
           } else if (campo.nome === "Conjunto de anúncio (1° Impacto)") {
-            fieldValue = { value: adset_name };
+            fieldValue = { value: adset_name || "Sem nome" };
           } else if (campo.nome === "Anúncio (1° Impacto)") {
-            fieldValue = { value: ad_name };
+            fieldValue = { value: ad_name || "Sem nome" };
           }
         }
 

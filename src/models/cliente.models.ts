@@ -71,6 +71,7 @@ export class ClienteModel {
         },
       });
       const contatos = response.data._embedded?.contacts[0];
+
       if (!contatos) {
         console.log("❌ Contato não encontrado");
         return null;

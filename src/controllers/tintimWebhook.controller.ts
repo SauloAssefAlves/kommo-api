@@ -35,7 +35,7 @@ export class TintimWebhookController {
     const webhookData = req.body;
     console.log(req.body)
     const evoUser = await this.clienteModel.buscarUsuarioPorNome("EVO Result");
-    const telefone = webhookData?.lead.phone;
+    const telefone = webhookData?.phone;
 
     const { source } = webhookData?.lead;
 

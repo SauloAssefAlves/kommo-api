@@ -8,7 +8,7 @@ export class TintimWebhookController {
 
   private async buscarLeadComTentativas(telefone: string): Promise<any> {
     // Delays em milissegundos para cada tentativa
-    const delays = [300, 5000, 10000]; // 300ms para a primeira tentativa, e 2000ms para as 2 tentativas seguintes.
+    const delays = [5000, 5000, 10000]; // 5s, 5s, 10s
 
     for (let i = 0; i < delays.length; i++) {
       const lead = await this.clienteModel.buscarLeadPorTelefone(telefone);

@@ -63,7 +63,10 @@ export class ClienteModel {
   }
   async buscarLeadPorTelefone(telefone: string): Promise<any | null> {
     try {
-      const formattedPhone = telefone.replace(/^55/, "").replace(/^\+/, "");
+      const formattedPhone = telefone
+        .replace(/^55/, "")
+        .replace(/^(\d{2})9/, "$1");
+      console.log("🔍 Buscando lead por telefone:", formattedPhone);
       const response = await this.api.get(`/contacts`, {
         params: {
           query: formattedPhone,

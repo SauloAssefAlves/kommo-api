@@ -1,8 +1,8 @@
 import { Router, Request, Response } from "express";
-import { ClienteController } from "../controllers/cliente.controller";
-import { ClienteModel } from "../models/cliente.models";
-import { TintimWebhookController } from "../controllers/tintimWebhook.controller";
-import { getClientesTintim } from "../config/database";
+import { ClienteController } from "../controllers/cliente.controller.js";
+import { ClienteModel } from "../models/cliente.models.js";
+import { TintimWebhookController } from "../controllers/tintimWebhook.controller.js";
+import { getClientesTintim } from "../config/database.js";
 
 const router = Router();
 

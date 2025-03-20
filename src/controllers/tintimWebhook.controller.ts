@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { ClienteModel } from "../models/cliente.models";
+import { ClienteModel } from "../models/cliente.models.js";
 export class TintimWebhookController {
   public clienteModel: ClienteModel;
   constructor(clienteModel: ClienteModel) {

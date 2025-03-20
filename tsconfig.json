@@ -1,13 +1,13 @@
 {
   "compilerOptions": {
-    "module": "ESNext",
-    "moduleResolution": "node",
-    "target": "ESNext",
-    "outDir": "./dist",
-    "rootDir": "./src",
-    "strict": true,
-    "esModuleInterop": true
-    
+    "module": "ESNext", // Usa ES Modules
+    "moduleResolution": "Node", // Resolução de módulos como o Node.js
+    "target": "ESNext", // Gera código que é compatível com ESNext
+    "outDir": "./dist", // Pasta de saída dos arquivos compilados
+    "rootDir": "./src", // Pasta onde estão os arquivos .ts
+    "esModuleInterop": true, // Permite importar pacotes CommonJS como se fossem ES Modules
+    "skipLibCheck": true, // Ignora checagem de tipos nas bibliotecas
+    "forceConsistentCasingInFileNames": true // Força a consistência no uso de maiúsculas/minúsculas nos nomes dos arquivos
   },
-  "include": ["src/**/*.ts"]
+  "include": ["src/**/*"]
 }

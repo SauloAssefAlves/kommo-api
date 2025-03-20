@@ -1,6 +1,6 @@
 import express from "express";
 import cors from "cors";
-import tintimWebhookRoutes from "./routes/tintimWebhookRoutes";
+import tintimWebhookRoutes from "./routes/tintimWebhookRoutes.js";
 
 const app = express();
 

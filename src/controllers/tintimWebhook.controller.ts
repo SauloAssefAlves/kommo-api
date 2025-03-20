@@ -33,18 +33,21 @@ export class TintimWebhookController {
 
   public async atualizarFiledsWebhookTintim(req: Request, res: Response) {
     const webhookData = req.body;
+    console.log("DATA:", webhookData);
     const evoUser = await this.clienteModel.buscarUsuarioPorNome("EVO Result");
+    console.log(evoUser);
     const telefone = webhookData?.phone;
 
     const source = webhookData?.source;
 
-    const {
-      campaing_name = "sem informação",
-      adset_name = "sem informação",
-      ad_name = "sem informação",
-    } = webhookData?.ad || {};
+    const { campaing_name, adset_name, ad_name } = webhookData?.ad || {};
 
     const lead = await this.buscarLeadComTentativas(telefone);
+
+    // Se não encontrar o lead, retorna erro
+    if (!lead) {
+      return res.status(404).json({ error: "Lead não encontrado" });
+    }
 
     const camposNames = [
       { nomeCampo: "Origem", enumNome: "WhatsApp" /* source */ },
@@ -124,9 +127,10 @@ export class TintimWebhookController {
         leadId: lead.id,
         text: textNote,
       });
+      return res.status(200).json({ message: "Lead atualizado com sucesso" });
     } catch (error) {
-      console.error("❌ Erro ao buscar IDs dos campos:", error);
-      return [];
+      console.error("❌ Erro ao atualizar lead:", error);
+      return res.status(500).json({ error: "Erro ao atualizar lead" });
     }
 
     // console.log("📤 Resposta do Kommo:", response);

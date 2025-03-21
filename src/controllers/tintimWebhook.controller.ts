@@ -35,12 +35,14 @@ export class TintimWebhookController {
     const webhookData = req.body;
     console.log("DATA:", webhookData);
     const evoUser = await this.clienteModel.buscarUsuarioPorNome("EVO Result");
-    console.log(evoUser);
     const telefone = webhookData?.phone;
 
     const source = webhookData?.source;
+    const { campaign_name, adset_name, ad_name } = webhookData?.ad || {};
 
-    const { campaing_name, adset_name, ad_name } = webhookData?.ad || {};
+    const campaing_name_tratado = campaign_name
+      ? campaign_name.replace(/🅔🅥🅞|\bEVO\b/g, "").trim()
+      : "";
 
     const lead = await this.buscarLeadComTentativas(telefone);
 
@@ -90,12 +92,14 @@ export class TintimWebhookController {
           // Se for um campo DATE_TIME, transforma em timestamp
           fieldValue = { value: Math.floor(Date.now() / 1000) }; // Timestamp em segundos
         } else {
-          if (campo.nome === "Campanha (1° Impacto)") {
-            fieldValue = { value: campaing_name || "Sem nome" };
-          } else if (campo.nome === "Conjunto de anúncio (1° Impacto)") {
-            fieldValue = { value: adset_name || "Sem nome" };
-          } else if (campo.nome === "Anúncio (1° Impacto)") {
-            fieldValue = { value: ad_name || "Sem nome" };
+          if (webhookData.ad) {
+            if (campo.nome === "Campanha (1° Impacto)") {
+              fieldValue = { value: campaing_name_tratado };
+            } else if (campo.nome === "Conjunto de anúncio (1° Impacto)") {
+              fieldValue = { value: adset_name };
+            } else if (campo.nome === "Anúncio (1° Impacto)") {
+              fieldValue = { value: ad_name };
+            }
           }
         }
 
@@ -107,10 +111,10 @@ export class TintimWebhookController {
     };
 
     const textTask = `LEAD FEZ UMA NOVA CONVERSÃO DE ADS
-                  Campanha: ${campaing_name}
+                  Campanha: ${campaing_name_tratado}
                   Conjunto: ${adset_name}
                   Anúncio: ${ad_name}`;
-    const textNote = `- LEAD FEZ UMA NOVA CONVERSÃO DE ADS - Campanha: ${campaing_name} Conjunto: ${adset_name} Anúncio: ${ad_name}`;
+    const textNote = `- LEAD FEZ UMA NOVA CONVERSÃO DE ADS - Campanha: ${campaing_name_tratado} Conjunto: ${adset_name} Anúncio: ${ad_name}`;
     try {
       // atualizando campos do lead
       await this.clienteModel.api.patch(`/leads/${lead.id}`, body);

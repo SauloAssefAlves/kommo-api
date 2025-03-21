@@ -66,7 +66,7 @@ export class ClienteModel {
       const formattedPhone = telefone
         .replace(/^55/, "")
         .replace(/^(\d{2})9?(\d{8})$/, (_, ddd, numero) => {
-          return parseInt(ddd) > 31 ? `${ddd}${numero}` : `${ddd}9${numero}`;
+          return parseInt(ddd) >= 31 ? `${ddd}${numero}` : `${ddd}9${numero}`;
         });
       console.log("🔍 Buscando lead por telefone:", formattedPhone);
       const response = await this.api.get(`/contacts`, {

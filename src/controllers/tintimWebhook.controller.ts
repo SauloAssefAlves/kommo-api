@@ -112,9 +112,9 @@ export class TintimWebhookController {
 
     const textTask = `LEAD FEZ UMA NOVA CONVERSÃO DE ADS
                   Campanha: ${campaing_name_tratado}
-                  Conjunto: ${adset_name}
-                  Anúncio: ${ad_name}`;
-    const textNote = `- LEAD FEZ UMA NOVA CONVERSÃO DE ADS - Campanha: ${campaing_name_tratado} Conjunto: ${adset_name} Anúncio: ${ad_name}`;
+                  Conjunto: ${adset_name ? adset_name : ""}
+                  Anúncio: ${ad_name ? ad_name : ""}`;
+    const textNote = `- LEAD FEZ UMA NOVA CONVERSÃO DE ADS - Campanha: ${campaing_name_tratado} Conjunto: ${adset_name? adset_name : ""} Anúncio: ${ad_name? ad_name : ""}`;
     try {
       // atualizando campos do lead
       await this.clienteModel.api.patch(`/leads/${lead.id}`, body);

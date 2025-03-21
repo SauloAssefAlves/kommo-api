@@ -16,22 +16,33 @@ const cliente = new ClienteModel(
 clientes.forEach((cliente) => {
   const clienteModel = new ClienteModel(cliente.nome, cliente.token);
 
-  router.post(`/${cliente.nome}`, async (req: Request, res: Response) => {
-    try {
-      await new TintimWebhookController(clienteModel).atualizarFiledsWebhookTintim(
-        req,
-        res
-      );
-     
-      console.log("🔍 Cliente:", cliente.nome);
-      res.status(200).json({ message: "✅ Webhook recebido com sucesso!!!!" });
-    } catch (error) {
-      console.error("❌ Erro ao buscar clientes:", error);
-      res.status(500).json({ error: "Erro ao buscar clientes" });
-    }
-  });
-});
+  // Rota POST para cada cliente
+  router.post(
+    `/${cliente.nome}`,
+    async (req: Request, res: Response): Promise<any> => {
+      try {
+        // Processa o webhook
+        await new TintimWebhookController(
+          clienteModel
+        ).atualizarFiledsWebhookTintim(req, res);
 
+        // Log de sucesso
+        console.log("🔍 Cliente:", cliente.nome);
+
+        // Responde com sucesso
+        return res
+          .status(200)
+          .json({ message: "✅ Webhook recebido com sucesso!!!!" });
+      } catch (error) {
+        // Log de erro
+        console.error("❌ Erro ao buscar clientes:", error);
+
+        // Responde com erro
+        return res.status(500).json({ error: "Erro ao buscar clientes" });
+      }
+    }
+  );
+});
 router.post("/clientes", async (req: Request, res: Response) => {
   try {
     await new TintimWebhookController(cliente).atualizarFiledsWebhookTintim(

@@ -52,7 +52,7 @@ export class TintimWebhookController {
     }
 
     const camposNames = [
-      { nomeCampo: "Origem", enumNome: "WhatsApp" /* source */ },
+      { nomeCampo: "Origem", enumNome: source },
       { nomeCampo: "Midia", enumNome: "Facebook ADS" },
       {
         nomeCampo: "Campanha (1° Impacto)" /* campaing_name */,

@@ -9,12 +9,30 @@ export class TintimWebhookController {
   private async buscarLeadComTentativas(telefone: string): Promise<any> {
     // Delays em milissegundos para cada tentativa
     const delays = [1000, 5000, 10000]; // 1s, 5s, 10s
+    const formattedPhone = telefone
+      .replace(/^55/, "")
+      .replace(/^(\d{2})9?(\d{8})$/, (_, ddd, numero) => {
+        return parseInt(ddd) >= 31 ? `${ddd}${numero}` : `${ddd}9${numero}`;
+      });
 
     for (let i = 0; i < delays.length; i++) {
-      const lead = await this.clienteModel.buscarLeadPorTelefone(telefone);
+      let lead = await this.clienteModel.buscarLeadPorTelefone(formattedPhone);
 
       if (lead) {
         return lead; // Se encontrar o lead, retorna.
+      }
+
+      // Se for a última tentativa, tenta novamente adicionando "9" após o DDD
+      if (i === delays.length - 1) {
+        const telefoneCom9 = formattedPhone.replace(/^(\d{2})(\d)/, "$19$2"); // Exemplo: 11987654321 → 119987654321
+        console.log(
+          `📞 Última tentativa com telefone modificado: ${telefoneCom9}`
+        );
+
+        lead = await this.clienteModel.buscarLeadPorTelefone(telefoneCom9);
+        if (lead) {
+          return lead;
+        }
       }
 
       // Se não encontrou e não é a última tentativa, aguarda o delay.
@@ -28,9 +46,8 @@ export class TintimWebhookController {
       }
     }
 
-    return null; // Se não encontrar nada após as tentativas, retorna null
+    return null;
   }
-
   public async atualizarFiledsWebhookTintim(req: Request, res: Response) {
     const webhookData = req.body;
     console.log("DATA:", webhookData);
@@ -114,7 +131,9 @@ export class TintimWebhookController {
                   Campanha: ${campaing_name_tratado}
                   Conjunto: ${adset_name ? adset_name : ""}
                   Anúncio: ${ad_name ? ad_name : ""}`;
-    const textNote = `- LEAD FEZ UMA NOVA CONVERSÃO DE ADS - Campanha: ${campaing_name_tratado} Conjunto: ${adset_name? adset_name : ""} Anúncio: ${ad_name? ad_name : ""}`;
+    const textNote = `- LEAD FEZ UMA NOVA CONVERSÃO DE ADS - Campanha: ${campaing_name_tratado} Conjunto: ${
+      adset_name ? adset_name : ""
+    } Anúncio: ${ad_name ? ad_name : ""}`;
     try {
       // atualizando campos do lead
       await this.clienteModel.api.patch(`/leads/${lead.id}`, body);

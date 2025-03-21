@@ -29,7 +29,6 @@ clientes.forEach((cliente) => {
       } catch (error) {
         console.error("❌ Erro ao buscar clientes:", error);
 
-        return res.status(500).json({ error: "Erro ao buscar clientes" });
       }
     }
   );

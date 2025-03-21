@@ -127,10 +127,8 @@ export class TintimWebhookController {
         leadId: lead.id,
         text: textNote,
       });
-      return res.status(200).json({ message: "Lead atualizado com sucesso" });
     } catch (error) {
       console.error("❌ Erro ao atualizar lead:", error);
-      return res.status(500).json({ error: "Erro ao atualizar lead" });
     }
 
     // console.log("📤 Resposta do Kommo:", response);

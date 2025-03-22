@@ -7,9 +7,9 @@ export class TintimWebhookController {
   }
 
   private async buscarLeadComTentativas(telefone: string): Promise<any> {
-    // Delays em milissegundos para cada tentativa
+
     const delays = [1000, 5000, 10000]; // 1s, 5s, 10s
-    const formattedPhone = telefone
+    let formattedPhone = telefone
       .replace(/^55/, "")
       .replace(/^(\d{2})9?(\d{8})$/, (_, ddd, numero) => {
         return parseInt(ddd) >= 31 ? `${ddd}${numero}` : `${ddd}9${numero}`;
@@ -19,35 +19,40 @@ export class TintimWebhookController {
       let lead = await this.clienteModel.buscarLeadPorTelefone(formattedPhone);
 
       if (lead) {
-        return lead; // Se encontrar o lead, retorna.
+        return lead; 
       }
 
-      // Se for a última tentativa, tenta novamente adicionando "9" após o DDD
+      // Se for a última tentativa, faz a inversão do 9
       if (i === delays.length - 1) {
-        const telefoneCom9 = formattedPhone.replace(/^(\d{2})(\d)/, "$19$2"); // Exemplo: 11987654321 → 119987654321
-        console.log(
-          `📞 Última tentativa com telefone modificado: ${telefoneCom9}`
+        formattedPhone = formattedPhone.replace(
+          /^(\d{2})(9?)(\d{8})$/,
+          (_, ddd, temNove, numero) => {
+            return temNove ? `${ddd}${numero}` : `${ddd}9${numero}`;
+          }
         );
 
-        lead = await this.clienteModel.buscarLeadPorTelefone(telefoneCom9);
+        console.log(
+          `📞 Última tentativa com telefone modificado: ${formattedPhone}`
+        );
+
+        lead = await this.clienteModel.buscarLeadPorTelefone(formattedPhone);
         if (lead) {
           return lead;
         }
       }
 
-      // Se não encontrou e não é a última tentativa, aguarda o delay.
       if (i < delays.length - 1) {
         console.log(
           `🕒 Tentativa ${i + 1} de ${delays.length} - Aguardando ${
             delays[i]
           }ms...`
         );
-        await new Promise((resolve) => setTimeout(resolve, delays[i])); // Delay em milissegundos
+        await new Promise((resolve) => setTimeout(resolve, delays[i]));
       }
     }
-
     return null;
   }
+
   public async atualizarFiledsWebhookTintim(req: Request, res: Response) {
     const webhookData = req.body;
     console.log("DATA:", webhookData);

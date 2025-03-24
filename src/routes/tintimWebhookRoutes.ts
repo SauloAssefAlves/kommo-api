@@ -7,7 +7,9 @@ import { getClientesTintim } from "../config/database.js";
 const router = Router();
 
 const clientes = await getClientesTintim();
-
+clientes.forEach((cliente) => {
+  console.log("🔍", `/tintimWebhook/${cliente.nome}`);
+})
 
 clientes.forEach((cliente) => {
   

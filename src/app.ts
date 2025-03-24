@@ -13,6 +13,6 @@ app.get("/teste", (req, res) => {
   res.send("🚀 Servidor rodando!");
 });
 
-console.log("🚀 Server started");
+
 
 export default app;

@@ -7,7 +7,6 @@ export class TintimWebhookController {
   }
 
   private async buscarLeadComTentativas(telefone: string): Promise<any> {
-
     const delays = [1000, 5000, 10000]; // 1s, 5s, 10s
     let formattedPhone = telefone
       .replace(/^55/, "")
@@ -19,7 +18,7 @@ export class TintimWebhookController {
       let lead = await this.clienteModel.buscarLeadPorTelefone(formattedPhone);
 
       if (lead) {
-        return lead; 
+        return lead;
       }
 
       // Se for a última tentativa, faz a inversão do 9
@@ -56,6 +55,10 @@ export class TintimWebhookController {
   public async atualizarFiledsWebhookTintim(req: Request, res: Response) {
     const webhookData = req.body;
     console.log("DATA:", webhookData);
+    if(webhookData.source != "Meta Ads"){
+      console.log("❌ Webhook não rastreável");
+      return res.status(400).json({ error: "webhook não rastreável" });
+    }
     const evoUser = await this.clienteModel.buscarUsuarioPorNome("EVO Result");
     const telefone = webhookData?.phone;
 
@@ -141,20 +144,23 @@ export class TintimWebhookController {
     } Anúncio: ${ad_name ? ad_name : ""}`;
     try {
       // atualizando campos do lead
-      await this.clienteModel.api.patch(`/leads/${lead.id}`, body);
+      await Promise.all([
+        this.clienteModel.api.patch(`/leads/${lead.id}`, body),
+        this.clienteModel.adicionarTask({
+          text: "Lead de ads",
+          leadId: lead.id,
+          responsible_user_id: evoUser.id,
+          result_text: textTask,
+        }),
+        this.clienteModel.adicionarNota({
+          leadId: lead.id,
+          text: textNote,
+        }),
+      ]);
       console.log("LEAD ATUALIZADO COM SUCESSO", lead.id, lead.name);
-      //criando task
-      await this.clienteModel.adicionarTask({
-        text: "Lead de ads",
-        leadId: lead.id,
-        responsible_user_id: evoUser.id,
-        result_text: textTask,
-      });
-      //criando note
-      await this.clienteModel.adicionarNota({
-        leadId: lead.id,
-        text: textNote,
-      });
+      return res
+        .status(200)
+        .json({ message: "✅ Webhook recebido com sucesso!!!!" });
     } catch (error) {
       console.error("❌ Erro ao atualizar lead:", error);
     }

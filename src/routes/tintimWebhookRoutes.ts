@@ -25,9 +25,7 @@ clientes.forEach((cliente) => {
 
         console.log("🔍 Cliente:", cliente.nome);
 
-        return res
-          .status(200)
-          .json({ message: "✅ Webhook recebido com sucesso!!!!" });
+   
       } catch (error) {
         console.error("❌ Erro ao buscar clientes:", error);
 

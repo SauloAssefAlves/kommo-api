@@ -28,11 +28,13 @@ export const db = async (text: string, params?: any[]) => {
 
 export const getClientesTintim = async () => {
   const response = await db(
-    "SELECT nome,token FROM clientes where tintim = true"
+    `SELECT u.nome AS unidade_nome, u.empresa_id, u.todas_unidades, c.token
+      FROM tintim_unidades u
+      JOIN clientes c ON c.id = u.empresa_id`
   );
   return response.map((cliente) => {
     return {
-      nome: cliente.nome,
+      nome: cliente.unidade_nome,
       token: descriptografarToken(cliente.token),
     };
   });

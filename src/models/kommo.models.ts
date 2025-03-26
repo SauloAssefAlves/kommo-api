@@ -8,7 +8,7 @@ export interface Cliente {
   telefone?: string;
 }
 
-export class ClienteModel {
+export class KommoModel {
   public api: AxiosInstance;
   constructor(private subdomain: string, private token: string) {
     this.api = axios.create({

@@ -1,8 +1,8 @@
 import { Request, Response } from "express";
-import { ClienteModel } from "../models/cliente.models.js";
+import { KommoModel } from "../models/kommo.models.js";
 export class TintimWebhookController {
-  public clienteModel: ClienteModel;
-  constructor(clienteModel: ClienteModel) {
+  public clienteModel: KommoModel;
+  constructor(clienteModel: KommoModel) {
     this.clienteModel = clienteModel;
   }
 
@@ -55,9 +55,11 @@ export class TintimWebhookController {
   public async atualizarFiledsWebhookTintim(req: Request, res: Response) {
     const webhookData = req.body;
     console.log("DATA:", webhookData);
-    if(webhookData.source != "Meta Ads"){
+    if (webhookData.source != "Meta Ads") {
       console.log("❌ Webhook não rastreável");
-      return res.status(400).json({ error: "webhook não rastreável" });
+      return res
+        .status(200)
+        .json({ message: "Webhook ignorado, mas recebido." });
     }
     const evoUser = await this.clienteModel.buscarUsuarioPorNome("EVO Result");
     const telefone = webhookData?.phone;
@@ -71,9 +73,11 @@ export class TintimWebhookController {
 
     const lead = await this.buscarLeadComTentativas(telefone);
 
-    // Se não encontrar o lead, retorna erro
     if (!lead) {
-      return res.status(404).json({ error: "Lead não encontrado" });
+      console.log("⚠️ Lead não encontrado para o webhook recebido.");
+      return res
+        .status(200)
+        .json({ message: "Webhook recebido, mas lead não encontrado." });
     }
 
     const camposNames = [

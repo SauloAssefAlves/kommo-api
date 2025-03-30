@@ -54,7 +54,6 @@ export class TintimWebhookController {
 
   public async atualizarFiledsWebhookTintim(req: Request, res: Response) {
     const webhookData = req.body;
-    console.log("DATA:", webhookData);
     if (webhookData.source != "Meta Ads") {
       console.log("❌ Webhook não rastreável");
       return res

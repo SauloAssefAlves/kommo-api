@@ -117,10 +117,6 @@ const ClienteController = {
           }
         );
 
-        console.log(
-          "Resposta da API de campos personalizados:",
-          customFieldsResponse.data
-        );
 
         // Filtra o custom field com o nome "unidades"
         const unidadesField =

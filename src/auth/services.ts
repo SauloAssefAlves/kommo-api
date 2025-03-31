@@ -12,7 +12,6 @@ export async function comparePassword(
   password: string,
   hash: string
 ): Promise<boolean> {
-  console.log(CryptoJS.SHA256(password).toString(), hash);
   return CryptoJS.SHA256(password).toString() === hash;
 }
 

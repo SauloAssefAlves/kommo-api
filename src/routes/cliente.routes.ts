@@ -5,14 +5,35 @@ import { authenticateToken } from "../auth/middleware.js";
 const router = Router();
 
 router.get("/listar", authenticateToken, ClienteController.listarClientes);
-router.get("/listarPeloNome/:nome", ClienteController.listarClientePeloNome);
-router.get("/listarPeloId/:id", ClienteController.listarClientePeloId);
-router.post("/listarUnidades", ClienteController.listarUnidadesKommo);
-router.get("/listarTintim", ClienteController.listarUnidadesTintim);
+router.get(
+  "/listarPeloNome/:nome",
+  authenticateToken,
+  ClienteController.listarClientePeloNome
+);
+router.get(
+  "/listarPeloId/:id",
+  authenticateToken,
+  ClienteController.listarClientePeloId
+);
+router.post(
+  "/listarUnidades",
+  authenticateToken,
+  ClienteController.listarUnidadesKommo
+);
+router.get(
+  "/listarTintim",
+  authenticateToken,
+  ClienteController.listarUnidadesTintim
+);
 router.post(
   "/cadastrarUnidadeTintim",
+  authenticateToken,
   ClienteController.cadastrarUnidadeTintim
 );
-router.post("/cadastrar", ClienteController.cadastrarCliente);
+router.post(
+  "/cadastrar",
+  authenticateToken,
+  ClienteController.cadastrarCliente
+);
 
 export default router;

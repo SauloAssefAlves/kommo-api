@@ -1,6 +1,6 @@
 import CryptoJS from "crypto-js";
 import jwt from "jsonwebtoken";
-import { jwtSecret, jwtExpiresIn } from "./config";
+import { jwtSecret, jwtExpiresIn } from "./config.js";
 import { db } from "../config/database.js";
 
 export async function hashPassword(password: string): Promise<string> {

@@ -4,7 +4,7 @@ import {
   comparePassword,
   generateToken,
   hashPassword,
-} from "../auth/services";
+} from "../auth/services.js";
 import { db } from "../config/database.js";
 
 const registerUser = async (req, res) => {

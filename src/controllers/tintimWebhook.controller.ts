@@ -1,7 +1,10 @@
 import { Request, Response } from "express";
 import { KommoModel } from "../models/kommo.models.js";
+
 export class TintimWebhookController {
   public clienteModel: KommoModel;
+  private contadorWebhook = 0; // Contador para alternar entre Facebook e Instagram
+
   constructor(clienteModel: KommoModel) {
     this.clienteModel = clienteModel;
   }
@@ -79,28 +82,32 @@ export class TintimWebhookController {
         .json({ message: "Webhook recebido, mas lead não encontrado." });
     }
 
+    // Alternando entre "Facebook ADS" e "Instagram"
+    const midia = this.contadorWebhook % 2 === 0 ? "Facebook ADS" : "Instagram ADS";
+    this.contadorWebhook++;
+
     const camposNames = [
       { nomeCampo: "Origem", enumNome: "WhatsApp" },
-      { nomeCampo: "Midia", enumNome: "Facebook ADS" },
+      { nomeCampo: "Midia", enumNome: midia }, // Aqui alteramos a midia
       {
-        nomeCampo: "Campanha (1° Impacto)" /* campaing_name */,
+        nomeCampo: "Campanha (1° Impacto)", // campaing_name
       },
       {
-        nomeCampo: "Conjunto de anúncio (1° Impacto)" /* adset_name */,
+        nomeCampo: "Conjunto de anúncio (1° Impacto)", // adset_name
       },
       {
-        nomeCampo: "Anúncio (1° Impacto)" /* ad_name */,
+        nomeCampo: "Anúncio (1° Impacto)", // ad_name
       },
       {
-        nomeCampo: "Data da primeira conversão" /* new Date() */,
+        nomeCampo: "Data da primeira conversão", // new Date()
       },
       {
         nomeCampo: "Lead veio de ADS",
-        enumNome: "Sim" /* sim */,
+        enumNome: "Sim", // sim
       },
       {
         nomeCampo: "Tipo Lead",
-        enumNome: "Inbound" /* Inbound */,
+        enumNome: "Inbound", // Inbound
       },
     ];
     const camposPersonalizados =
@@ -146,7 +153,7 @@ export class TintimWebhookController {
       adset_name ? adset_name : ""
     } Anúncio: ${ad_name ? ad_name : ""}`;
     try {
-      // atualizando campos do lead
+      // Atualizando campos do lead
       await Promise.all([
         this.clienteModel.api.patch(`/leads/${lead.id}`, body),
         this.clienteModel.adicionarTask({

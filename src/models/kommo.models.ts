@@ -20,6 +20,8 @@ export class KommoModel {
     });
   }
 
+
+  
   async buscarLeadPorId(leadId: number): Promise<any | null> {
     try {
       const response = await this.api.get(`/leads/${leadId}`, {

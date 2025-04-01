@@ -28,14 +28,22 @@ export const db = async (text: string, params?: any[]) => {
 
 export const getClientesTintim = async () => {
   const response = await db(
-    `SELECT u.nome AS unidade_nome, u.empresa_id, u.todas_unidades, c.token, u.unidade_formatada
+    `SELECT u.nome AS unidade_nome, u.empresa_id, u.todas_unidades, c.token, u.unidade_formatada, u.contador, u.id
       FROM tintim_unidades u
       JOIN clientes c ON c.id = u.empresa_id`
   );
   return response.map((cliente) => {
     return {
+      id: cliente.id,
       nome: cliente.unidade_formatada,
       token: descriptografarToken(cliente.token),
+      contador: cliente.contador,
     };
   });
 };
+
+export async function incrementarContadorUnidade(unidade_id: number) {
+  await db("UPDATE tintim_unidades SET contador = contador + 1 WHERE id = $1", [
+    unidade_id,
+  ]);
+}

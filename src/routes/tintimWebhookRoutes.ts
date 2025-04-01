@@ -20,7 +20,7 @@ clientes.forEach((cliente) => {
       try {
         await new TintimWebhookController(
           clienteModel
-        ).atualizarFiledsWebhookTintim(req, res);
+        ).atualizarFiledsWebhookTintim(req, res, cliente);
         if (!res.headersSent) {
           return res.status(200).json({
             success: true,

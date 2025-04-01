@@ -1,9 +1,9 @@
 import { Request, Response } from "express";
 import { KommoModel } from "../models/kommo.models.js";
+import { incrementarContadorUnidade } from "../config/database.js";
 
 export class TintimWebhookController {
   public clienteModel: KommoModel;
-  private contadorWebhook = 0; // Contador para alternar entre Facebook e Instagram
 
   constructor(clienteModel: KommoModel) {
     this.clienteModel = clienteModel;
@@ -12,6 +12,7 @@ export class TintimWebhookController {
   private async buscarLeadComTentativas(telefone: string): Promise<any> {
     const delays = [1000, 5000, 10000]; // 1s, 5s, 10s
     let formattedPhone = telefone
+    
       .replace(/^55/, "")
       .replace(/^(\d{2})9?(\d{8})$/, (_, ddd, numero) => {
         return parseInt(ddd) >= 31 ? `${ddd}${numero}` : `${ddd}9${numero}`;
@@ -55,8 +56,9 @@ export class TintimWebhookController {
     return null;
   }
 
-  public async atualizarFiledsWebhookTintim(req: Request, res: Response) {
+  public async atualizarFiledsWebhookTintim(req: Request, res: Response, cliente: any) {
     const webhookData = req.body;
+    const contador = cliente.contador;
     if (webhookData.source != "Meta Ads") {
       console.log("❌ Webhook não rastreável");
       return res
@@ -83,8 +85,8 @@ export class TintimWebhookController {
     }
 
     // Alternando entre "Facebook ADS" e "Instagram"
-    const midia = this.contadorWebhook % 2 === 0 ? "Facebook ADS" : "Instagram ADS";
-    this.contadorWebhook++;
+    const midia = contador % 2 === 0 ? "Facebook ADS" : "Instagram ADS";
+    await incrementarContadorUnidade(cliente.id);
 
     const camposNames = [
       { nomeCampo: "Origem", enumNome: "WhatsApp" },

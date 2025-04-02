@@ -20,8 +20,6 @@ export class KommoModel {
     });
   }
 
-
-  
   async buscarLeadPorId(leadId: number): Promise<any | null> {
     try {
       const response = await this.api.get(`/leads/${leadId}`, {
@@ -43,21 +41,27 @@ export class KommoModel {
   }
   async buscarUsuarioPorNome(nome: string): Promise<any | null> {
     try {
-      const response = await this.api.get("/users", {
-        params: { query: nome },
-      });
+      // Obtém todos os usuários
+      const response = await this.api.get("/users");
+      const usuarios = response.data._embedded?.users || [];
 
-      const usuarios = response.data._embedded?.users;
-
-      if (!usuarios || usuarios.length === 0) {
-        console.log("❌ Usuário não encontrado");
+      if (usuarios.length === 0) {
+        console.log("❌ Nenhum usuário encontrado.");
         return null;
       }
 
-      return usuarios[0]; // Retorna o primeiro usuário encontrado
+      // Filtra o usuário pelo nome exato (ou com includes se for parcial)
+      const usuarioEncontrado = usuarios.find((user) => user.name === nome);
+
+      if (!usuarioEncontrado) {
+        console.log(`❌ Usuário "${nome}" não encontrado.`);
+        return null;
+      }
+
+      return usuarioEncontrado;
     } catch (error: any) {
       console.error(
-        "Erro ao buscar usuário por nome:",
+        "❌ Erro ao buscar usuário por nome:",
         error.response?.data || error
       );
       return null;
@@ -171,9 +175,10 @@ export class KommoModel {
           responsible_user_id,
         },
       ];
+      console.log("📝 Adicionando task:", taskData);
       const response = await this.api.post(`/tasks`, taskData);
 
-      return response.data;
+      // return response.data;
     } catch (error) {
       console.error("Erro ao adicionar task:", error);
       return;

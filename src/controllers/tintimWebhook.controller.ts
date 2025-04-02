@@ -157,17 +157,17 @@ export class TintimWebhookController {
     try {
       // Atualizando campos do lead
       await Promise.all([
-        this.clienteModel.api.patch(`/leads/${lead.id}`, body),
+        // this.clienteModel.api.patch(`/leads/${lead.id}`, body),
         this.clienteModel.adicionarTask({
           text: "Lead de ads",
           leadId: lead.id,
           responsible_user_id: evoUser.id,
           result_text: textTask,
         }),
-        this.clienteModel.adicionarNota({
-          leadId: lead.id,
-          text: textNote,
-        }),
+        // this.clienteModel.adicionarNota({
+        //   leadId: lead.id,
+        //   text: textNote,
+        // }),
       ]);
       console.log("LEAD ATUALIZADO COM SUCESSO", lead.id, lead.name);
       return res

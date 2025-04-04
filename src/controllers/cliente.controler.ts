@@ -95,6 +95,106 @@ const ClienteController = {
     }
   },
 
+  async listarClientePipelinePeloId(req, res) {
+    try {
+      const response = await db(
+        "SELECT cl.*, c.nome as subdomain FROM cliente_pipelines cl inner join clientes c on c.id = cl.cliente_id where cl.cliente_id = $1",
+        [req.params.id]
+      );
+      if (response.length === 0) {
+        return res.status(404).json({ error: "Cliente não encontrado." });
+      }
+
+      const data = response.map((res) => {
+        return { ...res };
+      });
+
+      res.status(201).json({ data });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ error: "Erro ao listar clientes." });
+    }
+  },
+
+  async listarPipelinesPeloId(req, res) {
+    try {
+      const response = await db(
+        "select nome, token  from clientes where id = $1",
+        [req.params.id]
+      );
+      if (response.length === 0) {
+        return res.status(404).json({ error: "Cliente não encontrado." });
+      }
+
+      const secretKey = process.env.SECRET_KEY as string;
+      const decryptedToken = CryptoJS.AES.decrypt(
+        response[0].token,
+        secretKey
+      ).toString(CryptoJS.enc.Utf8);
+      const subdomain = response[0].nome;
+      const pipelinesResponse = await axios.get(
+        `https://${subdomain}.kommo.com/api/v4/leads/pipelines`, // Endpoint para buscar os pipelines
+        {
+          headers: {
+            Authorization: `Bearer ${decryptedToken}`,
+          },
+        }
+      );
+      // Verifica se a resposta contém os pipelines
+      if (
+        !pipelinesResponse.data._embedded ||
+        !pipelinesResponse.data._embedded.pipelines
+      ) {
+        return res.status(404).json({ error: "Nenhum pipeline encontrado." });
+      }
+      const data = pipelinesResponse.data._embedded.pipelines.map(
+        (pipeline) => {
+          return {
+            id: pipeline.id,
+            nome: pipeline.name,
+          };
+        }
+      );
+
+      res.status(201).json({ data });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ error: "Erro ao listar clientes." });
+    }
+  },
+
+  async cadastrarClientePipelines(req, res) {
+    try {
+      const { cliente_id, pipeline_id, nome } = req.body;
+
+      if (!cliente_id || !pipeline_id || !nome) {
+        return res.status(400).json({ error: "Dados inválidos." });
+      }
+
+      // Verificar se a pipeline já está cadastrada para esse cliente
+      const existingPipeline = await db(
+        "SELECT id FROM cliente_pipelines WHERE cliente_id = $1 AND pipeline_id = $2",
+        [cliente_id, pipeline_id]
+      );
+
+      if (existingPipeline.length > 0) {
+        return res.status(400).json({
+          message: "Essa pipeline já está cadastrada para esse cliente.",
+        });
+      }
+
+      // Inserir a nova pipeline
+      await db(
+        "INSERT INTO cliente_pipelines (cliente_id, pipeline_id, nome) VALUES ($1, $2, $3);",
+        [cliente_id, pipeline_id, nome]
+      );
+
+      res.status(201).json({ message: "Pipeline cadastrada com sucesso!" });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ error: "Erro ao cadastrar pipeline." });
+    }
+  },
   async listarUnidadesKommo(req, res) {
     try {
       // Recupera os dados de token e subdomínio do corpo da requisição
@@ -116,7 +216,6 @@ const ClienteController = {
             },
           }
         );
-
 
         // Filtra o custom field com o nome "unidades"
         const unidadesField =
@@ -170,6 +269,41 @@ const ClienteController = {
     } catch (error) {
       console.error(error);
       res.status(500).json({ error: "Erro ao listar clientes." });
+    }
+  },
+  async excluirCliente(req, res) {
+    try {
+      const { id } = req.params;
+      const response = await db(
+        "DELETE FROM clientes WHERE id = $1 RETURNING *",
+        [id]
+      );
+      if (response.length === 0) {
+        return res.status(404).json({ error: "Cliente não encontrado." });
+      }
+
+      res.status(200).json({ message: "Cliente excluído com sucesso!" });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ error: "Erro ao listar clientes." });
+    }
+  },
+
+  async excluirClientePipeline(req, res) {
+    try {
+      const { id } = req.params;
+      const response = await db(
+        "DELETE FROM cliente_pipelines WHERE id = $1 RETURNING *",
+        [id]
+      );
+      if (response.length === 0) {
+        return res.status(404).json({ error: "Pipeline não encontrado." });
+      }
+
+      res.status(200).json({ message: "Pipeline excluído com sucesso!" });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ error: "Erro ao excluir Pipeline." });
     }
   },
 

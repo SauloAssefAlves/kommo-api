@@ -4,6 +4,8 @@ import { authenticateToken } from "../auth/middleware.js";
 
 const router = Router();
 
+
+// ----------- Listagens -----------
 router.get("/listar", authenticateToken, ClienteController.listarClientes);
 router.get(
   "/listarPeloNome/:nome",
@@ -15,6 +17,18 @@ router.get(
   authenticateToken,
   ClienteController.listarClientePeloId
 );
+router.get(
+  "/listarClientePipelines/:id",
+  authenticateToken,
+  ClienteController.listarClientePipelinePeloId
+);
+
+router.get(
+  "/listarPipelines/:id",
+  authenticateToken,
+  ClienteController.listarPipelinesPeloId
+);
+
 router.post(
   "/listarUnidades",
   authenticateToken,
@@ -25,15 +39,33 @@ router.get(
   authenticateToken,
   ClienteController.listarUnidadesTintim
 );
+// ----------- CADASTROS -----------
+router.post(
+  "/cadastrar",
+  authenticateToken,
+  ClienteController.cadastrarCliente
+);
+router.post(
+  "/cadastrarClientePipelines",
+  authenticateToken,
+  ClienteController.cadastrarClientePipelines
+);
 router.post(
   "/cadastrarUnidadeTintim",
   authenticateToken,
   ClienteController.cadastrarUnidadeTintim
 );
-router.post(
-  "/cadastrar",
+
+// ----------- EXCLUIR -----------
+router.delete(
+  "/excluir/:id",
   authenticateToken,
-  ClienteController.cadastrarCliente
+  ClienteController.excluirCliente
+);
+router.delete(
+  "/excluirClientePipeline/:id",
+  authenticateToken,
+  ClienteController.excluirClientePipeline
 );
 
 export default router;

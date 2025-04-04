@@ -12,7 +12,7 @@ clientes.forEach((cliente) => {
 });
 
 clientes.forEach((cliente) => {
-  const clienteModel = new KommoModel(cliente.nome, cliente.token);
+  const clienteModel = new KommoModel(cliente.cliente_nome, cliente.token);
 
   router.post(
     `/${cliente.nome}`,

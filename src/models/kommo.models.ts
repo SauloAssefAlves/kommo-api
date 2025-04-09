@@ -175,7 +175,6 @@ export class KommoModel {
           responsible_user_id,
         },
       ];
-      console.log("📝 Adicionando task:", taskData);
       const response = await this.api.post(`/tasks`, taskData);
 
       // return response.data;

@@ -12,7 +12,7 @@ export class TintimWebhookController {
   private async buscarLeadComTentativas(telefone: string): Promise<any> {
     const delays = [1000, 5000, 10000]; // 1s, 5s, 10s
     let formattedPhone = telefone
-    
+
       .replace(/^55/, "")
       .replace(/^(\d{2})9?(\d{8})$/, (_, ddd, numero) => {
         return parseInt(ddd) >= 31 ? `${ddd}${numero}` : `${ddd}9${numero}`;
@@ -56,8 +56,14 @@ export class TintimWebhookController {
     return null;
   }
 
-  public async atualizarFiledsWebhookTintim(req: Request, res: Response, cliente: any) {
+  public async atualizarFiledsWebhookTintim(
+    req: Request,
+    res: Response,
+    cliente: any
+  ) {
     const webhookData = req.body;
+    console.log("--- HEADERS ---");
+    console.log(req.headers);
     console.log("Webhook recebido:", webhookData);
     const contador = cliente.contador;
     if (webhookData.source != "Meta Ads") {

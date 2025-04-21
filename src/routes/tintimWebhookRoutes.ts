@@ -30,9 +30,12 @@ clientes.forEach((cliente) => {
         console.log("🔍 Cliente:", cliente.nome);
       } catch (error) {
         if (!res.headersSent) {
-          return res.status(500).json({ error: "Erro ao processar o webhook" });
+          return res.status(200).json({
+            success: false,
+            message: "Erro ao processar o webhook",
+          });
         }
-        console.error("❌ Erro ao buscar clientes:", error);
+        console.log("X Cliente:", cliente.nome);
       }
     }
   );

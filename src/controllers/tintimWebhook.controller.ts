@@ -62,7 +62,7 @@ export class TintimWebhookController {
     cliente: any
   ) {
     const webhookData = req.body;
-    console.log("Webhook recebido:", webhookData);
+    console.log("Webhook recebido");
     const contador = cliente.contador;
     if (webhookData.source != "Meta Ads") {
       console.log("❌ Webhook não rastreável");

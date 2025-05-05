@@ -78,7 +78,7 @@ export class KommoModel {
       });
       const contatos = response.data._embedded?.contacts[0];
 
-      if (!contatos) {
+      if (!response) {
         console.log("❌ Contato não encontrado");
         return null;
       }
@@ -89,7 +89,7 @@ export class KommoModel {
 
       return null;
     } catch (error) {
-      console.error("Erro ao buscar contato por telefone:", error);
+      console.log("Erro ao buscar contato por telefone: ", error);
       return null;
     }
   }
@@ -186,24 +186,82 @@ export class KommoModel {
   async adicionarNota({
     leadId,
     text,
+    typeNote = "extended_service_message",
   }: {
     leadId: number;
     text: string;
+    typeNote?: string;
   }): Promise<any | null> {
     try {
-      const noteData = [
-        {
-          entity_id: leadId,
-          note_type: "extended_service_message", // Tipo de nota (pode ser ajustado)
-          params: { service: "EVO Result", text: text },
-        },
-      ];
-
+      let noteData = [];
+      if (typeNote === "common") {
+        noteData = [
+          {
+            entity_id: leadId,
+            note_type: typeNote, // Tipo de nota (pode ser ajustado)
+            params: { text: text },
+          },
+        ];
+      }
+      if (typeNote === "extended_service_message") {
+        noteData = [
+          {
+            entity_id: leadId,
+            note_type: typeNote, // Tipo de nota (pode ser ajustado)
+            params: { service: "Evo Result", text: text },
+          },
+        ];
+      }
       const response = await this.api.post("/leads/notes", noteData);
 
       return response.data;
     } catch (error) {
-      console.error("❌ Erro ao adicionar nota:", error);
+      console.error("❌ Erro ao adicionar nota:");
+      return null;
+    }
+  }
+
+  async getCustomfields({
+    entity_type,
+  }: {
+    entity_type: string;
+  }): Promise<any | null> {
+    try {
+      const response = await this.api.get(`${entity_type}/custom_fields`);
+      if (!response.data) {
+        console.log("❌ Nenhum campo encontrado");
+        return null;
+      }
+      return response.data;
+    } catch (error) {
+      return null;
+    }
+  }
+
+  async cadastrarContact(body): Promise<any | null> {
+    try {
+      const response = await this.api.post("/contacts", body);
+      return response.data;
+    } catch (error) {
+      console.error("❌ Erro ao cadastrar contato:", error);
+      return null;
+    }
+  }
+  async cadastrarLead(body): Promise<any | null> {
+    try {
+      const response = await this.api.post("/leads", body);
+      return response.data;
+    } catch (error) {
+      console.error("❌ Erro ao cadastrar contato:", error);
+      return null;
+    }
+  }
+  async getPipelines(): Promise<any | null> {
+    try {
+      const response = await this.api.get("/leads/pipelines");
+      return response.data._embedded.pipelines;
+    } catch (error) {
+      console.error("❌ Erro ao cadastrar contato:", error);
       return null;
     }
   }

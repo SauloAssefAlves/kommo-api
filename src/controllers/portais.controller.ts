@@ -47,13 +47,13 @@ export class PortaisController {
     res: Response,
     cliente: any
   ): Promise<any> {
-    const pipeline_id = Number(cliente.pipeline_id);
-    const status_id = cliente.status_id;
-    const html = req.body.html;
-    // const text = req.body[0].text;
-    const address = req.body.from.address;
-    const origem = await this.obterOrigem(address);
-    console.log("🔍", origem);
+    // const pipeline_id = Number(cliente.pipeline_id);
+    // const status_id = cliente.status_id;
+    // const html = req.body.html;
+    // // const text = req.body[0].text;
+    // const address = req.body.from.address;
+    // const origem = await this.obterOrigem(address);
+    // console.log("🔍", origem);
     console.log("🔍", req.body);
 
     // const response = await openai.chat.completions.create({

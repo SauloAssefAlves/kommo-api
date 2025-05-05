@@ -49,34 +49,35 @@ export class PortaisController {
   ): Promise<any> {
     const pipeline_id = Number(cliente.pipeline_id);
     const status_id = cliente.status_id;
-    const html = req.body[0].html;
-    const text = req.body[0].text;
-    const address = req.body[0].from.address;
+    const html = req.body.html;
+    // const text = req.body[0].text;
+    const address = req.body.from.address;
     const origem = await this.obterOrigem(address);
     console.log("🔍", origem);
+    console.log("🔍", req.body);
 
-    const response = await openai.chat.completions.create({
-      model: "gpt-4o-mini", // pode usar "gpt-3.5-turbo" se preferir
-      messages: [
-        {
-          role: "system",
-          content: `
-                    A partir do HTML abaixo, extraia os seguintes campos: nome, telefone, carro, valor e email.
-                    **Regras**:
-                    1. O valor do carro deve ser apenas um número inteiro, sem os centavos.
-                    2. carro de interesse ,no objeto json, deve ser somente carro.
-                    3. Retire o DDI do telefone e mantenha apenas o NÚMERO. sem hifens.
-                    4. O telefone deve ser apenas números, sem espaços ou caracteres especiais.
-                    Retorne apenas um objeto com esses campos. Não explique nada, somente uma chave {} com os campos dentro.
-                    HTML:${html}
-                    `,
-        },
-      ],
-    });
-    const extractedData = JSON.parse(response.choices[0].message.content);
+    // const response = await openai.chat.completions.create({
+    //   model: "gpt-4o-mini", // pode usar "gpt-3.5-turbo" se preferir
+    //   messages: [
+    //     {
+    //       role: "system",
+    //       content: `
+    //                 A partir do HTML abaixo, extraia os seguintes campos: nome, telefone, carro, valor e email.
+    //                 **Regras**:
+    //                 1. O valor do carro deve ser apenas um número inteiro, sem os centavos.
+    //                 2. carro de interesse ,no objeto json, deve ser somente carro.
+    //                 3. Retire o DDI do telefone e mantenha apenas o NÚMERO. sem hifens.
+    //                 4. O telefone deve ser apenas números, sem espaços ou caracteres especiais.
+    //                 Retorne apenas um objeto com esses campos. Não explique nada, somente uma chave {} com os campos dentro.
+    //                 HTML:${html}
+    //                 `,
+    //     },
+    //   ],
+    // });
+    // const extractedData = JSON.parse(response.choices[0].message.content);
     // const { nome, telefone, carro, valor, email } = extractedData;
 
-    console.log(extractedData);
+    // console.log(extractedData);
 //     const leadExistente = await this.clienteModel.buscarLeadPorTelefone(
 //       telefone
 //     );

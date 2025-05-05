@@ -21,6 +21,7 @@ clientesPortais.forEach((cliente) => {
     `/${cliente.nome}`,
     async (req: Request, res: Response): Promise<any> => {
       try {
+        console.log("🔍", req.body);
         await new PortaisController(clienteModel).atualizarFiledsWebhookPortais(
           req,
           res,

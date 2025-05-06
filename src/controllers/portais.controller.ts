@@ -154,7 +154,7 @@ export class PortaisController {
 
       const bodyContact = [
         {
-          name: "teste",
+          name: nome,
           custom_fields_values: [
             {
               field_id: phoneField,

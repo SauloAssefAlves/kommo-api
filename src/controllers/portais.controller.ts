@@ -96,9 +96,10 @@ export class PortaisController {
     };
 
     const telefoneTratado = tratarTelefone(telefone);
-    const leadExistente = await this.clienteModel.buscarLeadPorTelefone(
-      telefoneTratado
-    );
+    // const leadExistente = await this.clienteModel.buscarLeadPorTelefone(
+    //   telefoneTratado
+    // );
+    console.log("🔍", telefoneTratado);
 
     const noteText = `ℹ Nova conversão de formulário com sucesso!
 

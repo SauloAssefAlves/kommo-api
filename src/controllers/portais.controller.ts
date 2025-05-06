@@ -120,18 +120,17 @@ export class PortaisController {
     Origem: ${origem}
     Anúncio: ${carro} - R$ ${valor}`;
 
+
+
+    if (!leadExistente) {
+      const { id } = leadExistente;
+      await this.clienteModel.adicionarNota({
+        leadId: id,
+        text: noteText,
+        typeNote: "common",
+      });
+    } //asasas
     
-    console.log(leadExistente);
-    console.log(noteText);
-
-    // if (!leadExistente) {
-    //   const { id } = leadExistente;
-    //   await this.clienteModel.adicionarNota({
-    //     leadId: id,
-    //     text: noteText,
-    //     typeNote: "common",
-    //   });
-
     //     } else {
     //       const customFiledsContacts = await this.clienteModel.getCustomfields({
     //         entity_type: "contacts",

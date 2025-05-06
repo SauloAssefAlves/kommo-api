@@ -74,36 +74,37 @@ export class PortaisController {
       ],
     });
     const extractedData = JSON.parse(response.choices[0].message.content);
-    // const { nome, telefone, carro, valor, email } = extractedData;
+    const { nome, telefone, carro, valor, email } = extractedData;
 
     console.log(extractedData);
-    // const leadExistente = await this.clienteModel.buscarLeadPorTelefone(
-    //   telefone
-    // );
-    // const { id } = leadExistente;
-//     const noteText = `ℹ Nova conversão de formulário com sucesso!
+    const leadExistente = await this.clienteModel.buscarLeadPorTelefone(
+      telefone
+    );
 
-// ----
-// Dados do formulário preenchido:
+    const noteText = `ℹ Nova conversão de formulário com sucesso!
 
-// Veículo: ${carro}
-// Nome: ${nome}
-// Telefone: ${telefone}
-// Mensagem: Veja abaixo informações de um cliente que acessou o número de contato ou WhatsApp da sua loja.
+----
+Dados do formulário preenchido:
 
-// ----
+Veículo: ${carro}
+Nome: ${nome}
+Telefone: ${telefone}
+Mensagem: Veja abaixo informações de um cliente que acessou o número de contato ou WhatsApp da sua loja.
 
-// Mídia: Portais
-// Origem: ${origem}
-// Anúncio: ${carro} - R$ ${valor}`;
+----
 
+Mídia: Portais
+Origem: ${origem}
+Anúncio: ${carro} - R$ ${valor}`;
 
-//     if (!leadExistente) {
-//       await this.clienteModel.adicionarNota({
-//         leadId: id,
-//         text: noteText,
-//         typeNote: "common",
-//       });
+    if (!leadExistente) {
+      const { id } = leadExistente;
+      await this.clienteModel.adicionarNota({
+        leadId: id,
+        text: noteText,
+        typeNote: "common",
+      });
+    }  //apagar essa chave
 //     } else {
 //       const customFiledsContacts = await this.clienteModel.getCustomfields({
 //         entity_type: "contacts",

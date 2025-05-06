@@ -49,7 +49,7 @@ export class PortaisController {
   ): Promise<any> {
     const pipeline_id = Number(cliente.pipeline_id);
     const status_id = cliente.status_id;
-    const html = req.body.html;
+    const html = atob(req.body.html);
     // // const text = req.body[0].text;
     const address = req.body.from.address;
     const origem = await this.obterOrigem(address);

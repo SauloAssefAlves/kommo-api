@@ -78,7 +78,6 @@ export class PortaisController {
 
     console.log(extractedData);
 
-    const testTelefone = "85996400751";
     // Remove o DDI, mantém o DDD e remove o 9 após o DDD, caso tenha
     const tratarTelefone = (telefone: string): string => {
       // Remove caracteres não numéricos
@@ -98,7 +97,9 @@ export class PortaisController {
       return numero;
     };
 
-    const telefoneTratado = tratarTelefone(testTelefone);
+    const telefoneTratado = tratarTelefone(telefone);
+
+
     const leadExistente = await this.clienteModel.buscarLeadPorTelefone(
       telefoneTratado
     );
@@ -111,7 +112,7 @@ export class PortaisController {
 
     Veículo: ${carro}
     Nome: ${nome}
-    Telefone: ${telefone}
+    Telefone: ${telefoneTratado}
     Mensagem: Veja abaixo informações de um cliente que acessou o número de contato ou WhatsApp da sua loja.
 
     ----
@@ -120,9 +121,7 @@ export class PortaisController {
     Origem: ${origem}
     Anúncio: ${carro} - R$ ${valor}`;
 
-
-
-    if (!leadExistente) {
+    if (leadExistente) {
       const { id } = leadExistente;
       await this.clienteModel.adicionarNota({
         leadId: id,
@@ -130,7 +129,7 @@ export class PortaisController {
         typeNote: "common",
       });
     } //asasas
-    
+
     //     } else {
     //       const customFiledsContacts = await this.clienteModel.getCustomfields({
     //         entity_type: "contacts",

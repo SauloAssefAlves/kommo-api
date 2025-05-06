@@ -77,8 +77,27 @@ export class PortaisController {
     const { nome, telefone, carro, valor, email } = extractedData;
 
     console.log(extractedData);
+    // Remove o DDI e mantém apenas o número sem o "9" a mais no início, se aplicável
+    const tratarTelefone = (telefone: string): string => {
+      // Remove caracteres não numéricos
+      let numero = telefone.replace(/\D/g, "");
+
+      // Remove o DDI (assumindo que o DDI tem 2 dígitos no início)
+      if (numero.length > 11) {
+        numero = numero.slice(numero.length - 11);
+      }
+
+      // Remove o "9" adicional no início, se aplicável
+      if (numero.length === 11 && numero.startsWith("9")) {
+        numero = numero.slice(1);
+      }
+
+      return numero;
+    };
+
+    const telefoneTratado = tratarTelefone(telefone);
     const leadExistente = await this.clienteModel.buscarLeadPorTelefone(
-      telefone
+      telefoneTratado
     );
 
     const noteText = `ℹ Nova conversão de formulário com sucesso!

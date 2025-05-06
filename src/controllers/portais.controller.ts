@@ -49,7 +49,7 @@ export class PortaisController {
   ): Promise<any> {
     const pipeline_id = Number(cliente.pipeline_id);
     const status_id = cliente.status_id;
-    const html = atob(req.body.html);
+    const html = req.body.html
     // // const text = req.body[0].text;
     const address = req.body.from.address;
     const origem = await this.obterOrigem(address);
@@ -88,7 +88,7 @@ export class PortaisController {
       }
 
       // Remove o "9" adicional no início, se aplicável
-      if (numero.length === 11 && numero.startsWith("9")) {
+      if (numero.length === 9 && numero.startsWith("9")) {
         numero = numero.slice(1);
       }
 

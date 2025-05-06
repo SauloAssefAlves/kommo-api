@@ -49,8 +49,8 @@ export class PortaisController {
   ): Promise<any> {
     const pipeline_id = Number(cliente.pipeline_id);
     const status_id = cliente.status_id;
-    const html = atob(req.body.html)
-    // // const text = req.body[0].text;
+    const html = atob(req.body.html);
+    // const text = req.body[0].text;
     const address = req.body.from.address;
     const origem = await this.obterOrigem(address);
     console.log("🔍", origem);
@@ -77,45 +77,52 @@ export class PortaisController {
     const { nome, telefone, carro, valor, email } = extractedData;
 
     console.log(extractedData);
-    // Remove o DDI e mantém apenas o número sem o "9" a mais no início, se aplicável
+
+    const testTelefone = "85996400751";
+    // Remove o DDI, mantém o DDD e remove o 9 após o DDD, caso tenha
     const tratarTelefone = (telefone: string): string => {
       // Remove caracteres não numéricos
-      let numero = telefone.replace(/\D/g, "");
+      let numero = telefone;
 
-      // Remove o DDI (assumindo que o DDI tem 2 dígitos no início)
+      // Remove o DDI (assumindo que o DDI tem até 3 dígitos no início)
       if (numero.length > 11) {
-        numero = numero.slice(numero.length - 11);
+        numero = numero.slice(-11);
       }
 
-      // Remove o "9" adicional no início, se aplicável
-      if (numero.length === 9 && numero.startsWith("9")) {
-        numero = numero.slice(1);
+      // Verifica se o número tem 11 dígitos e começa com o 9 após o DDD
+      if (numero.length === 11 && numero[2] === "9") {
+        numero = numero.slice(0, 2) + numero.slice(3); // Remove o 9 após o DDD
       }
 
+      console.log("🔍", numero);
       return numero;
     };
 
-    const telefoneTratado = tratarTelefone(telefone);
-    // const leadExistente = await this.clienteModel.buscarLeadPorTelefone(
-    //   telefoneTratado
-    // );
+    const telefoneTratado = tratarTelefone(testTelefone);
+    const leadExistente = await this.clienteModel.buscarLeadPorTelefone(
+      telefoneTratado
+    );
     console.log("🔍", telefoneTratado);
 
     const noteText = `ℹ Nova conversão de formulário com sucesso!
 
-----
-Dados do formulário preenchido:
+    ----
+    Dados do formulário preenchido:
 
-Veículo: ${carro}
-Nome: ${nome}
-Telefone: ${telefone}
-Mensagem: Veja abaixo informações de um cliente que acessou o número de contato ou WhatsApp da sua loja.
+    Veículo: ${carro}
+    Nome: ${nome}
+    Telefone: ${telefone}
+    Mensagem: Veja abaixo informações de um cliente que acessou o número de contato ou WhatsApp da sua loja.
 
-----
+    ----
 
-Mídia: Portais
-Origem: ${origem}
-Anúncio: ${carro} - R$ ${valor}`;
+    Mídia: Portais
+    Origem: ${origem}
+    Anúncio: ${carro} - R$ ${valor}`;
+
+    
+    console.log(leadExistente);
+    console.log(noteText);
 
     // if (!leadExistente) {
     //   const { id } = leadExistente;
@@ -124,132 +131,132 @@ Anúncio: ${carro} - R$ ${valor}`;
     //     text: noteText,
     //     typeNote: "common",
     //   });
-  
-//     } else {
-//       const customFiledsContacts = await this.clienteModel.getCustomfields({
-//         entity_type: "contacts",
-//       });
 
-//       const customFiledsLead = await this.clienteModel.getCustomfields({
-//         entity_type: "leads",
-//       });
+    //     } else {
+    //       const customFiledsContacts = await this.clienteModel.getCustomfields({
+    //         entity_type: "contacts",
+    //       });
 
-//       const origemField = customFiledsLead._embedded.custom_fields.find(
-//         (field: any) => field.name === "Origem"
-//       )?.id;
+    //       const customFiledsLead = await this.clienteModel.getCustomfields({
+    //         entity_type: "leads",
+    //       });
 
-//       const veiculoField = customFiledsLead._embedded.custom_fields.find(
-//         (field: any) => field.name === "Veículo"
-//       )?.id;
+    //       const origemField = customFiledsLead._embedded.custom_fields.find(
+    //         (field: any) => field.name === "Origem"
+    //       )?.id;
 
-//       const phoneField = customFiledsContacts._embedded.custom_fields.find(
-//         (field: any) => field.code === "PHONE"
-//       )?.id;
+    //       const veiculoField = customFiledsLead._embedded.custom_fields.find(
+    //         (field: any) => field.name === "Veículo"
+    //       )?.id;
 
-//       const emailField = customFiledsContacts._embedded.custom_fields.find(
-//         (field: any) => field.code === "EMAIL"
-//       )?.id;
+    //       const phoneField = customFiledsContacts._embedded.custom_fields.find(
+    //         (field: any) => field.code === "PHONE"
+    //       )?.id;
 
-//       const bodyContact = [
-//         {
-//           name: "teste",
-//           custom_fields_values: [
-//             {
-//               field_id: phoneField,
-//               values: [
-//                 {
-//                   value: telefone,
-//                 },
-//               ],
-//             },
-//             {
-//               field_id: emailField,
-//               values: [
-//                 {
-//                   value: email,
-//                 },
-//               ],
-//             },
-//           ],
-//         },
-//       ];
+    //       const emailField = customFiledsContacts._embedded.custom_fields.find(
+    //         (field: any) => field.code === "EMAIL"
+    //       )?.id;
 
-//       console.log(veiculoField, origemField, phoneField, emailField); //ids
+    //       const bodyContact = [
+    //         {
+    //           name: "teste",
+    //           custom_fields_values: [
+    //             {
+    //               field_id: phoneField,
+    //               values: [
+    //                 {
+    //                   value: telefone,
+    //                 },
+    //               ],
+    //             },
+    //             {
+    //               field_id: emailField,
+    //               values: [
+    //                 {
+    //                   value: email,
+    //                 },
+    //               ],
+    //             },
+    //           ],
+    //         },
+    //       ];
 
-//       const contact = await this.clienteModel.cadastrarContact(
-//         JSON.stringify(bodyContact)
-//       );
-//       const pipelines = await this.clienteModel.getPipelines();
+    //       console.log(veiculoField, origemField, phoneField, emailField); //ids
 
-//       const pipeline = pipelines.find(
-//         (pipeline: any) => pipeline.id === pipeline_id
-//       );
-//       const status = pipeline._embedded.statuses.find(
-//         (status: any) => status.id === status_id
-//       );
+    //       const contact = await this.clienteModel.cadastrarContact(
+    //         JSON.stringify(bodyContact)
+    //       );
+    //       const pipelines = await this.clienteModel.getPipelines();
 
-//       const contactId = contact._embedded.contacts[0].id;
-//       console.log("🔍", pipeline, status, contactId, phoneField, telefone);
-//       const bodyLead = [
-//         {
-//           name: "teste saulo", //nome
-//           price: valor,
-//           status_id: status_id,
-//           pipeline_id: pipeline_id,
-//           _embedded: {
-//             contacts: [
-//               {
-//                 id: contactId,
-//               },
-//             ],
-//           },
-//           custom_fields_values: [
-//             {
-//               field_id: origemField,
-//               values: [
-//                 {
-//                   value: "PORTAIS",
-//                 },
-//               ],
-//             },
-//             {
-//               field_id: veiculoField,
-//               values: [
-//                 {
-//                   value: carro,
-//                 },
-//               ],
-//             },
-//           ],
-//         },
-//       ];
+    //       const pipeline = pipelines.find(
+    //         (pipeline: any) => pipeline.id === pipeline_id
+    //       );
+    //       const status = pipeline._embedded.statuses.find(
+    //         (status: any) => status.id === status_id
+    //       );
 
-//       const lead = await this.clienteModel.cadastrarLead(
-//         JSON.stringify(bodyLead)
-//       );
-//       const leadId = lead._embedded.leads[0].id;
+    //       const contactId = contact._embedded.contacts[0].id;
+    //       console.log("🔍", pipeline, status, contactId, phoneField, telefone);
+    //       const bodyLead = [
+    //         {
+    //           name: "teste saulo", //nome
+    //           price: valor,
+    //           status_id: status_id,
+    //           pipeline_id: pipeline_id,
+    //           _embedded: {
+    //             contacts: [
+    //               {
+    //                 id: contactId,
+    //               },
+    //             ],
+    //           },
+    //           custom_fields_values: [
+    //             {
+    //               field_id: origemField,
+    //               values: [
+    //                 {
+    //                   value: "PORTAIS",
+    //                 },
+    //               ],
+    //             },
+    //             {
+    //               field_id: veiculoField,
+    //               values: [
+    //                 {
+    //                   value: carro,
+    //                 },
+    //               ],
+    //             },
+    //           ],
+    //         },
+    //       ];
 
-//       const noteTextLead = `ℹ Novo Lead (ID ${leadId})
+    //       const lead = await this.clienteModel.cadastrarLead(
+    //         JSON.stringify(bodyLead)
+    //       );
+    //       const leadId = lead._embedded.leads[0].id;
 
-// ----
-// Dados do formulário preenchido:
+    //       const noteTextLead = `ℹ Novo Lead (ID ${leadId})
 
-// Veículo: ${carro}
-// Nome: ${nome}
-// Telefone: ${telefone}
-// Mensagem: Veja abaixo informações de um cliente que acessou o número de contato ou WhatsApp da sua loja.
+    // ----
+    // Dados do formulário preenchido:
 
-// ----
+    // Veículo: ${carro}
+    // Nome: ${nome}
+    // Telefone: ${telefone}
+    // Mensagem: Veja abaixo informações de um cliente que acessou o número de contato ou WhatsApp da sua loja.
 
-// Mídia: Portais
-// Origem: ${origem}
-// Anúncio: ${carro} - R$ ${valor}`;
+    // ----
 
-//       await this.clienteModel.adicionarNota({
-//         leadId: leadId,
-//         text: noteTextLead,
-//         typeNote: "common",
-//       });
-//     }
+    // Mídia: Portais
+    // Origem: ${origem}
+    // Anúncio: ${carro} - R$ ${valor}`;
+
+    //       await this.clienteModel.adicionarNota({
+    //         leadId: leadId,
+    //         text: noteTextLead,
+    //         typeNote: "common",
+    //       });
+    //     }
   }
 }

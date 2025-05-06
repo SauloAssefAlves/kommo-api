@@ -49,12 +49,13 @@ export class PortaisController {
   ): Promise<any> {
     // const pipeline_id = Number(cliente.pipeline_id);
     // const status_id = cliente.status_id;
-    // const html = req.body.html;
+    const html = req.body.html;
     // // const text = req.body[0].text;
     // const address = req.body.from.address;
     // const origem = await this.obterOrigem(address);
     // console.log("🔍", origem);
     console.log("🔍", req.body);
+    console.log("🔍", atob(html));
 
     // const response = await openai.chat.completions.create({
     //   model: "gpt-4o-mini", // pode usar "gpt-3.5-turbo" se preferir

@@ -76,12 +76,12 @@ export class KommoModel {
           with: "leads",
         },
       });
-      const contatos = response.data._embedded?.contacts[0];
 
       if (!response) {
         console.log("❌ Contato não encontrado");
         return null;
       }
+      const contatos = response.data._embedded?.contacts[0];
       if (contatos._embedded?.leads?.length > 0) {
         const leadId = contatos._embedded.leads[0].id;
         return await this.buscarLeadPorId(leadId);

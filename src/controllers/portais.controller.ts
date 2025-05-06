@@ -99,7 +99,6 @@ export class PortaisController {
 
     const telefoneTratado = tratarTelefone(telefone);
 
-
     const leadExistente = await this.clienteModel.buscarLeadPorTelefone(
       telefoneTratado
     );
@@ -128,133 +127,133 @@ export class PortaisController {
         text: noteText,
         typeNote: "common",
       });
-    } //asasas
+    } else {
+      const customFiledsContacts = await this.clienteModel.getCustomfields({
+        entity_type: "contacts",
+      });
 
-    //     } else {
-    //       const customFiledsContacts = await this.clienteModel.getCustomfields({
-    //         entity_type: "contacts",
-    //       });
+      const customFiledsLead = await this.clienteModel.getCustomfields({
+        entity_type: "leads",
+      });
 
-    //       const customFiledsLead = await this.clienteModel.getCustomfields({
-    //         entity_type: "leads",
-    //       });
+      const origemField = customFiledsLead._embedded.custom_fields.find(
+        (field: any) => field.name === "Origem"
+      )?.id;
 
-    //       const origemField = customFiledsLead._embedded.custom_fields.find(
-    //         (field: any) => field.name === "Origem"
-    //       )?.id;
+      const veiculoField = customFiledsLead._embedded.custom_fields.find(
+        (field: any) => field.name === "Veículo"
+      )?.id;
 
-    //       const veiculoField = customFiledsLead._embedded.custom_fields.find(
-    //         (field: any) => field.name === "Veículo"
-    //       )?.id;
+      const phoneField = customFiledsContacts._embedded.custom_fields.find(
+        (field: any) => field.code === "PHONE"
+      )?.id;
 
-    //       const phoneField = customFiledsContacts._embedded.custom_fields.find(
-    //         (field: any) => field.code === "PHONE"
-    //       )?.id;
+      const emailField = customFiledsContacts._embedded.custom_fields.find(
+        (field: any) => field.code === "EMAIL"
+      )?.id;
 
-    //       const emailField = customFiledsContacts._embedded.custom_fields.find(
-    //         (field: any) => field.code === "EMAIL"
-    //       )?.id;
+      const bodyContact = [
+        {
+          name: "teste",
+          custom_fields_values: [
+            {
+              field_id: phoneField,
+              values: [
+                {
+                  value: `+55${telefoneTratado}`,
+                },
+              ],
+            },
+            {
+              field_id: emailField,
+              values: [
+                {
+                  value: email,
+                },
+              ],
+            },
+          ],
+        },
+      ];
 
-    //       const bodyContact = [
-    //         {
-    //           name: "teste",
-    //           custom_fields_values: [
-    //             {
-    //               field_id: phoneField,
-    //               values: [
-    //                 {
-    //                   value: telefone,
-    //                 },
-    //               ],
-    //             },
-    //             {
-    //               field_id: emailField,
-    //               values: [
-    //                 {
-    //                   value: email,
-    //                 },
-    //               ],
-    //             },
-    //           ],
-    //         },
-    //       ];
+      console.log(veiculoField, origemField, phoneField, emailField); //ids
 
-    //       console.log(veiculoField, origemField, phoneField, emailField); //ids
+      const contact = await this.clienteModel.cadastrarContact(
+        JSON.stringify(bodyContact)
+      );
+      const pipelines = await this.clienteModel.getPipelines();
 
-    //       const contact = await this.clienteModel.cadastrarContact(
-    //         JSON.stringify(bodyContact)
-    //       );
-    //       const pipelines = await this.clienteModel.getPipelines();
+      const pipeline = pipelines.find(
+        (pipeline: any) => pipeline.id === pipeline_id
+      );
+      const status = pipeline._embedded.statuses.find(
+        (status: any) => status.id === status_id
+      );
 
-    //       const pipeline = pipelines.find(
-    //         (pipeline: any) => pipeline.id === pipeline_id
-    //       );
-    //       const status = pipeline._embedded.statuses.find(
-    //         (status: any) => status.id === status_id
-    //       );
+      const contactId = contact._embedded.contacts[0].id;
+      console.log("🔍", pipeline, status, contactId, phoneField, telefone);
+      const bodyLead = [
+        {
+          name: nome, //nome
+          price: valor,
+          status_id: status_id,
+          pipeline_id: pipeline_id,
+          _embedded: {
+            contacts: [
+              {
+                id: contactId,
+              },
+            ],
+          },
+          custom_fields_values: [
+            {
+              field_id: origemField,
+              values: [
+                {
+                  value: "PORTAIS",
+                },
+              ],
+            },
+            {
+              field_id: veiculoField,
+              values: [
+                {
+                  value: carro,
+                },
+              ],
+            },
+          ],
+        },
+      ];
 
-    //       const contactId = contact._embedded.contacts[0].id;
-    //       console.log("🔍", pipeline, status, contactId, phoneField, telefone);
-    //       const bodyLead = [
-    //         {
-    //           name: "teste saulo", //nome
-    //           price: valor,
-    //           status_id: status_id,
-    //           pipeline_id: pipeline_id,
-    //           _embedded: {
-    //             contacts: [
-    //               {
-    //                 id: contactId,
-    //               },
-    //             ],
-    //           },
-    //           custom_fields_values: [
-    //             {
-    //               field_id: origemField,
-    //               values: [
-    //                 {
-    //                   value: "PORTAIS",
-    //                 },
-    //               ],
-    //             },
-    //             {
-    //               field_id: veiculoField,
-    //               values: [
-    //                 {
-    //                   value: carro,
-    //                 },
-    //               ],
-    //             },
-    //           ],
-    //         },
-    //       ];
+      const lead = await this.clienteModel.cadastrarLead(
+        JSON.stringify(bodyLead)
+      );
+      const leadId = lead._embedded.leads[0].id;
 
-    //       const lead = await this.clienteModel.cadastrarLead(
-    //         JSON.stringify(bodyLead)
-    //       );
-    //       const leadId = lead._embedded.leads[0].id;
+      const noteTextLead = `ℹ Novo Lead (ID ${leadId})
 
-    //       const noteTextLead = `ℹ Novo Lead (ID ${leadId})
+    ----
+    Dados do formulário preenchido:
 
-    // ----
-    // Dados do formulário preenchido:
+    Veículo: ${carro}
+    Nome: ${nome}
+    Telefone: ${telefone}
+    Mensagem: Veja abaixo informações de um cliente que acessou o número de contato ou WhatsApp da sua loja.
 
-    // Veículo: ${carro}
-    // Nome: ${nome}
-    // Telefone: ${telefone}
-    // Mensagem: Veja abaixo informações de um cliente que acessou o número de contato ou WhatsApp da sua loja.
+    ----
 
-    // ----
+    Mídia: Portais
+    Origem: ${origem}
+    Anúncio: ${carro} - R$ ${valor}`;
 
-    // Mídia: Portais
-    // Origem: ${origem}
-    // Anúncio: ${carro} - R$ ${valor}`;
+      await this.clienteModel.adicionarNota({
+        leadId: leadId,
+        text: noteTextLead,
+        typeNote: "common",
+      });
 
-    //       await this.clienteModel.adicionarNota({
-    //         leadId: leadId,
-    //         text: noteTextLead,
-    //         typeNote: "common",
-    //       });
-    //     }
+      console.log("Novo lead criado");
+    }
   }
 }

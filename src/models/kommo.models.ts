@@ -77,15 +77,14 @@ export class KommoModel {
         },
       });
 
-      if (!response) {
+      if (!response || !response.data || !response.data._embedded?.contacts?.length) {
         console.log("❌ Contato não encontrado");
         return null;
       } else {
-        const contatos = response.data._embedded?.contacts[0];
+        const contatos = response.data._embedded.contacts[0];
         if (contatos._embedded?.leads?.length > 0) {
           const leadId = contatos._embedded.leads[0].id;
-          await this.buscarLeadPorId(leadId);
-          return;
+          return await this.buscarLeadPorId(leadId);
         }
       }
 

@@ -10,7 +10,7 @@ export class TintimWebhookController {
   }
 
   private async buscarLeadComTentativas(telefone: string): Promise<any> {
-    const delays = [1000, 5000, 10000]; // 1s, 5s, 10s
+    const delays = [5000, 10000, 15000, 20000]; // 5s, 10s, 20s
     let formattedPhone = telefone
 
       .replace(/^55/, "")

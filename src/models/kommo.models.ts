@@ -80,11 +80,13 @@ export class KommoModel {
       if (!response) {
         console.log("❌ Contato não encontrado");
         return null;
-      }
-      const contatos = response.data._embedded?.contacts[0];
-      if (contatos._embedded?.leads?.length > 0) {
-        const leadId = contatos._embedded.leads[0].id;
-        return await this.buscarLeadPorId(leadId);
+      } else {
+        const contatos = response.data._embedded?.contacts[0];
+        if (contatos._embedded?.leads?.length > 0) {
+          const leadId = contatos._embedded.leads[0].id;
+          await this.buscarLeadPorId(leadId);
+          return;
+        }
       }
 
       return null;

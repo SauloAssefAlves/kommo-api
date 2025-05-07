@@ -176,6 +176,8 @@ export class PortaisController {
         },
       ];
 
+
+
       console.log(veiculoField, origemField, phoneField, emailField); //ids
 
       const contact = await this.clienteModel.cadastrarContact(

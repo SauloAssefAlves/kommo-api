@@ -67,21 +67,30 @@ export class PortaisController {
             {
               role: "system",
               content: `
-                A partir do HTML abaixo, extraia os seguintes campos: nome, telefone, carro, valor e email.
-                **Regras**:
-                1. O valor do carro deve ser um NUMERO INTEIRO, sem os centavos.
-                2. carro de interesse ,no objeto json, deve ser somente carro.
-                3. Retire o DDI do telefone e mantenha apenas o NÚMERO. sem hifens.
-                4. O telefone deve ser apenas números, sem espaços ou caracteres especiais.
-                Retorne apenas um objeto válido com esses campos. Não explique nada, somente uma chave com {nome, telefone, carro, valor e email } com os campos dentro.
-                HTML:${html}
+          Você é um assistente que processa HTML e extrai informações específicas. 
+          A partir do HTML fornecido, extraia os seguintes campos: nome, telefone, carro, valor e email.
+          Regras obrigatórias:
+          1. O valor do carro deve ser um NÚMERO INTEIRO, sem os centavos.
+          2. O campo "carro" no objeto JSON deve conter apenas o modelo do carro, sem marca ou outras informações adicionais. Por exemplo, para "CHEVROLET ONIX ADVANTAGE", o campo "carro" deve conter apenas "ONIX ADVANTAGE".
+          3. O telefone deve conter apenas números, sem DDI, espaços, hifens ou caracteres especiais.
+          4. Sempre retorne um JSON válido com os campos {nome, telefone, carro, valor, email}.
+          5. Não inclua explicações ou texto adicional, apenas o JSON.
+          HTML:${html}
               `,
             },
           ],
         });
 
-        extractedData = JSON.parse(response.choices[0].message.content);
-        if (typeof extractedData === "object" && !Array.isArray(extractedData)) {
+        // Remove aspas desnecessárias do JSON retornado
+        const rawContent = response.choices[0].message.content;
+        const cleanedContent = rawContent.replace(/“|”|```|json/g, "").trim();
+        extractedData = JSON.parse(cleanedContent);
+        console.log("⭐", extractedData);
+
+        if (
+          typeof extractedData === "object" &&
+          !Array.isArray(extractedData)
+        ) {
           break; // Exit loop if valid JSON is received
         } else {
           throw new Error("Resposta não é um JSON válido.");
@@ -90,13 +99,13 @@ export class PortaisController {
         attempts++;
         console.error(`Erro ao extrair dados (tentativa ${attempts}):`, error);
         if (attempts >= maxRetries) {
-          throw new Error("Falha ao processar os dados extraídos do HTML após várias tentativas.");
+          throw new Error(
+            "Falha ao processar os dados extraídos do HTML após várias tentativas."
+          );
         }
       }
     }
     const { nome, telefone, carro, valor, email } = extractedData;
-
-    console.log(extractedData);
 
     // Remove o DDI, mantém o DDD e remove o 9 após o DDD, caso tenha
     const tratarTelefone = (telefone: string): string => {
@@ -129,19 +138,19 @@ export class PortaisController {
 
     const noteText = `ℹ Nova conversão de formulário com sucesso!
 
-    ----
-    Dados do formulário preenchido:
+      ----
+      Dados do formulário preenchido:
 
-    Veículo: ${carro}
-    Nome: ${nome}
-    Telefone: ${telefoneTratado}
-    Mensagem: Veja abaixo informações de um cliente que acessou o número de contato ou WhatsApp da sua loja.
+      Veículo: ${carro}
+      Nome: ${nome}
+      Telefone: ${telefoneTratado}
+      Mensagem: Veja abaixo informações de um cliente que acessou o número de contato ou WhatsApp da sua loja.
 
-    ----
+      ----
 
-    Mídia: Portais
-    Origem: ${origem}
-    Anúncio: ${carro} - R$ ${valor}`;
+      Mídia: Portais
+      Origem: ${origem}
+      Anúncio: ${carro} - R$ ${valor}`;
 
     console.log("🔍", leadExistente);
     if (leadExistente) {
@@ -244,19 +253,19 @@ export class PortaisController {
 
         const noteTextLead = `ℹ Novo Lead (ID ${leadId})
 
-      ----
-      Dados do formulário preenchido:
+        ----
+        Dados do formulário preenchido:
 
-      Veículo: ${carro}
-      Nome: ${nome}
-      Telefone: ${telefone}
-      Mensagem: Veja abaixo informações de um cliente que acessou o número de contato ou WhatsApp da sua loja.
+        Veículo: ${carro}
+        Nome: ${nome}
+        Telefone: ${telefone}
+        Mensagem: Veja abaixo informações de um cliente que acessou o número de contato ou WhatsApp da sua loja.
 
-      ----
+        ----
 
-      Mídia: Portais
-      Origem: ${origem}
-      Anúncio: ${carro} - R$ ${valor}`;
+        Mídia: Portais
+        Origem: ${origem}
+        Anúncio: ${carro} - R$ ${valor}`;
 
         await this.clienteModel.adicionarNota({
           leadId: leadId,
@@ -327,19 +336,19 @@ export class PortaisController {
 
         const noteTextLead = `ℹ Novo Lead (ID ${leadId})
 
-      ----
-      Dados do formulário preenchido:
+        ----
+        Dados do formulário preenchido:
 
-      Veículo: ${carro}
-      Nome: ${nome}
-      Telefone: ${telefone}
-      Mensagem: Veja abaixo informações de um cliente que acessou o número de contato ou WhatsApp da sua loja.
+        Veículo: ${carro}
+        Nome: ${nome}
+        Telefone: ${telefone}
+        Mensagem: Veja abaixo informações de um cliente que acessou o número de contato ou WhatsApp da sua loja.
 
-      ----
+        ----
 
-      Mídia: Portais
-      Origem: ${origem}
-      Anúncio: ${carro} - R$ ${valor}`;
+        Mídia: Portais
+        Origem: ${origem}
+        Anúncio: ${carro} - R$ ${valor}`;
 
         await this.clienteModel.adicionarNota({
           leadId: leadId,
@@ -347,7 +356,7 @@ export class PortaisController {
           typeNote: "common",
         });
 
-        console.log("Novo lead criado");
+        console.log("👍 Novo lead criado");
       }
     }
   }

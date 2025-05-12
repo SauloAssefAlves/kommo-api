@@ -33,6 +33,7 @@ clientesPortais.forEach((cliente) => {
         });
       } catch (error) {
         console.log("X Cliente:", cliente.nome);
+        console.log("Erro:", error);
         return res.status(500).json({
           success: false,
           message: "Erro ao processar o webhook do portal",

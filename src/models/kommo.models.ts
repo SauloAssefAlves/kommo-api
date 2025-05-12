@@ -35,7 +35,17 @@ export class KommoModel {
 
       return response.data;
     } catch (error) {
-      console.error("Erro ao buscar lead por ID:", error);
+      if (error.response?.data?.["validation-errors"]) {
+        console.error(
+          "❌ Erro ao buscar lead pelo id:",
+          error.response.data["validation-errors"][0].errors
+        );
+      } else {
+        console.error(
+          "❌ Erro ao buscar lead pelo id:",
+          error.response?.data || error
+        );
+      }
       return;
     }
   }
@@ -60,10 +70,17 @@ export class KommoModel {
 
       return usuarioEncontrado;
     } catch (error: any) {
-      console.error(
-        "❌ Erro ao buscar usuário por nome:",
-        error.response?.data || error
-      );
+      if (error.response?.data?.["validation-errors"]) {
+        console.error(
+          "❌ Erro ao buscar usuario por nome:",
+          error.response.data["validation-errors"][0].errors
+        );
+      } else {
+        console.error(
+          "❌  Erro ao buscar usuario por nome:",
+          error.response?.data || error
+        );
+      }
       return null;
     }
   }
@@ -77,7 +94,11 @@ export class KommoModel {
         },
       });
 
-      if (!response || !response.data || !response.data._embedded?.contacts?.length) {
+      if (
+        !response ||
+        !response.data ||
+        !response.data._embedded?.contacts?.length
+      ) {
         console.log("❌ Contato não encontrado");
         return null;
       } else {
@@ -90,7 +111,17 @@ export class KommoModel {
 
       return null;
     } catch (error) {
-      console.log("Erro ao buscar contato por telefone: ", error);
+      if (error.response?.data?.["validation-errors"]) {
+        console.error(
+          "❌ Erro ao buscar lead por telefone:",
+          error.response.data["validation-errors"][0].errors
+        );
+      } else {
+        console.error(
+          "❌ Erro ao buscar lead por telefone:",
+          error.response?.data || error
+        );
+      }
       return null;
     }
   }
@@ -147,7 +178,17 @@ export class KommoModel {
 
       return camposEncontrados;
     } catch (error) {
-      console.error("❌ Erro ao buscar IDs dos campos:", error);
+      if (error.response?.data?.["validation-errors"]) {
+        console.error(
+          "❌ Erro ao buscar id por nomes campos:",
+          error.response.data["validation-errors"][0].errors
+        );
+      } else {
+        console.error(
+          "❌ Erro ao buscar id por nomes campos:",
+          error.response?.data || error
+        );
+      }
       return []; // Retorna um array vazio em caso de erro
     }
   }
@@ -180,7 +221,17 @@ export class KommoModel {
 
       // return response.data;
     } catch (error) {
-      console.error("Erro ao adicionar task:", error);
+      if (error.response?.data?.["validation-errors"]) {
+        console.error(
+          "❌ Erro ao adicionar task:",
+          error.response.data["validation-errors"][0].errors
+        );
+      } else {
+        console.error(
+          "❌ Erro ao adicionar task:",
+          error.response?.data || error
+        );
+      }
       return;
     }
   }
@@ -214,10 +265,20 @@ export class KommoModel {
         ];
       }
       const response = await this.api.post("/leads/notes", noteData);
-
+      console.log("Nota adicionada com sucesso:", response.data);
       return response.data;
     } catch (error) {
-      console.error("❌ Erro ao adicionar nota:");
+      if (error.response?.data?.["validation-errors"]) {
+        console.error(
+          "❌ Erro ao adicionar nota:",
+          error.response.data["validation-errors"][0].errors
+        );
+      } else {
+        console.error(
+          "❌ Erro ao adicionar nota:",
+          error.response?.data || error
+        );
+      }
       return null;
     }
   }
@@ -235,6 +296,17 @@ export class KommoModel {
       }
       return response.data;
     } catch (error) {
+      if (error.response?.data?.["validation-errors"]) {
+        console.error(
+          "❌ Erro ao buscar campos personalisados:",
+          error.response.data["validation-errors"][0].errors
+        );
+      } else {
+        console.error(
+          "❌ Erro ao buscar campos personalisados:",
+          error.response?.data || error
+        );
+      }
       return null;
     }
   }
@@ -244,7 +316,17 @@ export class KommoModel {
       const response = await this.api.post("/contacts", body);
       return response.data;
     } catch (error) {
-      console.error("❌ Erro ao cadastrar contato:", error);
+      if (error.response?.data?.["validation-errors"]) {
+        console.error(
+          "❌ Erro ao cadastrar contato:",
+          error.response.data["validation-errors"][0].errors
+        );
+      } else {
+        console.error(
+          "❌ Erro ao cadastrar contato:",
+          error.response?.data || error
+        );
+      }
       return null;
     }
   }
@@ -253,7 +335,17 @@ export class KommoModel {
       const response = await this.api.post("/leads", body);
       return response.data;
     } catch (error) {
-      console.error("❌ Erro ao cadastrar contato:", error);
+      if (error.response?.data?.["validation-errors"]) {
+        console.error(
+          "❌ Erro ao cadastrar lead:",
+          error.response.data["validation-errors"][0].errors
+        );
+      } else {
+        console.error(
+          "❌ Erro ao cadastrar lead:",
+          error.response?.data || error
+        );
+      }
       return null;
     }
   }
@@ -262,7 +354,17 @@ export class KommoModel {
       const response = await this.api.get("/leads/pipelines");
       return response.data._embedded.pipelines;
     } catch (error) {
-      console.error("❌ Erro ao cadastrar contato:", error);
+      if (error.response?.data?.["validation-errors"]) {
+        console.error(
+          "❌ Erro ao buscar pipelines:",
+          error.response.data["validation-errors"][0].errors
+        );
+      } else {
+        console.error(
+          "❌ Erro ao buscar pipelines:",
+          error.response?.data || error
+        );
+      }
       return null;
     }
   }

@@ -49,31 +49,51 @@ export class PortaisController {
   ): Promise<any> {
     const pipeline_id = Number(cliente.pipeline_id);
     const status_id = cliente.status_id;
-    const html = atob(req.body.html);
+    const html = req.body.html;
     // const text = req.body[0].text;
     const address = req.body.from.address;
     const origem = await this.obterOrigem(address);
     console.log("🔍", origem);
 
-    const response = await openai.chat.completions.create({
-      model: "gpt-4o-mini", // pode usar "gpt-3.5-turbo" se preferir
-      messages: [
-        {
-          role: "system",
-          content: `
-                    A partir do HTML abaixo, extraia os seguintes campos: nome, telefone, carro, valor e email.
-                    **Regras**:
-                    1. O valor do carro deve ser apenas um número inteiro, sem os centavos.
-                    2. carro de interesse ,no objeto json, deve ser somente carro.
-                    3. Retire o DDI do telefone e mantenha apenas o NÚMERO. sem hifens.
-                    4. O telefone deve ser apenas números, sem espaços ou caracteres especiais.
-                    Retorne apenas um objeto com esses campos. Não explique nada, somente uma chave {} com os campos dentro.
-                    HTML:${html}
-                    `,
-        },
-      ],
-    });
-    const extractedData = JSON.parse(response.choices[0].message.content);
+    const maxRetries = 5;
+    let attempts = 0;
+    let extractedData: any;
+
+    while (attempts < maxRetries) {
+      try {
+        const response = await openai.chat.completions.create({
+          model: "gpt-4o-mini", // pode usar "gpt-3.5-turbo" se preferir
+          messages: [
+            {
+              role: "system",
+              content: `
+                A partir do HTML abaixo, extraia os seguintes campos: nome, telefone, carro, valor e email.
+                **Regras**:
+                1. O valor do carro deve ser um NUMERO INTEIRO, sem os centavos.
+                2. carro de interesse ,no objeto json, deve ser somente carro.
+                3. Retire o DDI do telefone e mantenha apenas o NÚMERO. sem hifens.
+                4. O telefone deve ser apenas números, sem espaços ou caracteres especiais.
+                Retorne apenas um objeto válido com esses campos. Não explique nada, somente uma chave com {nome, telefone, carro, valor e email } com os campos dentro.
+                HTML:${html}
+              `,
+            },
+          ],
+        });
+
+        extractedData = JSON.parse(response.choices[0].message.content);
+        if (typeof extractedData === "object" && !Array.isArray(extractedData)) {
+          break; // Exit loop if valid JSON is received
+        } else {
+          throw new Error("Resposta não é um JSON válido.");
+        }
+      } catch (error) {
+        attempts++;
+        console.error(`Erro ao extrair dados (tentativa ${attempts}):`, error);
+        if (attempts >= maxRetries) {
+          throw new Error("Falha ao processar os dados extraídos do HTML após várias tentativas.");
+        }
+      }
+    }
     const { nome, telefone, carro, valor, email } = extractedData;
 
     console.log(extractedData);
@@ -93,6 +113,10 @@ export class PortaisController {
         numero = numero.slice(0, 2) + numero.slice(3); // Remove o 9 após o DDD
       }
 
+      if (numero.length === 9 && numero[0] === "9") {
+        numero = numero.slice(1); // Remove o 9 inicial
+      }
+
       console.log("🔍", numero);
       return numero;
     };
@@ -102,7 +126,6 @@ export class PortaisController {
     const leadExistente = await this.clienteModel.buscarLeadPorTelefone(
       telefoneTratado
     );
-    console.log("🔍", telefoneTratado);
 
     const noteText = `ℹ Nova conversão de formulário com sucesso!
 
@@ -120,29 +143,35 @@ export class PortaisController {
     Origem: ${origem}
     Anúncio: ${carro} - R$ ${valor}`;
 
+    console.log("🔍", leadExistente);
     if (leadExistente) {
       const { id } = leadExistente;
+      console.log("asdas");
       await this.clienteModel.adicionarNota({
         leadId: id,
         text: noteText,
         typeNote: "common",
       });
     } else {
-      const customFiledsContacts = await this.clienteModel.getCustomfields({
-        entity_type: "contacts",
-      });
-
       const customFiledsLead = await this.clienteModel.getCustomfields({
         entity_type: "leads",
       });
 
       const origemField = customFiledsLead._embedded.custom_fields.find(
         (field: any) => field.name === "Origem"
-      )?.id;
+      );
+
+      const midiaFiled = customFiledsLead._embedded.custom_fields.find(
+        (field: any) => field.name === "Midia"
+      );
 
       const veiculoField = customFiledsLead._embedded.custom_fields.find(
-        (field: any) => field.name === "Veículo"
+        (field: any) => field.name === "Modelo (VN)"
       )?.id;
+
+      const customFiledsContacts = await this.clienteModel.getCustomfields({
+        entity_type: "contacts",
+      });
 
       const phoneField = customFiledsContacts._embedded.custom_fields.find(
         (field: any) => field.code === "PHONE"
@@ -176,10 +205,6 @@ export class PortaisController {
         },
       ];
 
-
-
-      console.log(veiculoField, origemField, phoneField, emailField); //ids
-
       const contact = await this.clienteModel.cadastrarContact(
         JSON.stringify(bodyContact)
       );
@@ -193,69 +218,137 @@ export class PortaisController {
       );
 
       const contactId = contact._embedded.contacts[0].id;
-      console.log("🔍", pipeline, status, contactId, phoneField, telefone);
-      const bodyLead = [
-        {
-          name: nome, //nome
-          price: valor,
-          status_id: status_id,
-          pipeline_id: pipeline_id,
-          _embedded: {
-            contacts: [
+
+      // -------------------- CASO NÃO TENHA OS CAMPOS PADRÕES --------------------
+      if (!origemField || !midiaFiled || !veiculoField) {
+        const bodyLeadSemCamposPadroes = [
+          {
+            name: nome,
+            price: parseInt(valor, 10),
+            status_id: status_id,
+            pipeline_id: pipeline_id,
+            _embedded: {
+              contacts: [
+                {
+                  id: contactId,
+                },
+              ],
+            },
+          },
+        ];
+        const lead = await this.clienteModel.cadastrarLead(
+          JSON.stringify(bodyLeadSemCamposPadroes)
+        );
+
+        const leadId = lead._embedded.leads[0].id;
+
+        const noteTextLead = `ℹ Novo Lead (ID ${leadId})
+
+      ----
+      Dados do formulário preenchido:
+
+      Veículo: ${carro}
+      Nome: ${nome}
+      Telefone: ${telefone}
+      Mensagem: Veja abaixo informações de um cliente que acessou o número de contato ou WhatsApp da sua loja.
+
+      ----
+
+      Mídia: Portais
+      Origem: ${origem}
+      Anúncio: ${carro} - R$ ${valor}`;
+
+        await this.clienteModel.adicionarNota({
+          leadId: leadId,
+          text: noteTextLead,
+          typeNote: "common",
+        });
+
+        console.log("Novo lead criado");
+
+        // -------------------- CASO TENHA OS CAMPOS PADRÕES --------------------
+      } else {
+        const origemEnum = origemField.enums.find(
+          (enumItem: any) => enumItem.value === origem
+        );
+        const midiaEnum = midiaFiled.enums.find(
+          (enumItem: any) => enumItem.value === "Portais"
+        );
+        const bodyLead = [
+          {
+            name: nome,
+            price: parseInt(valor, 10),
+            status_id: status_id,
+            pipeline_id: pipeline_id,
+            _embedded: {
+              contacts: [
+                {
+                  id: contactId,
+                },
+              ],
+            },
+            custom_fields_values: [
               {
-                id: contactId,
+                field_id: origemField.id,
+                values: [
+                  {
+                    enum_id: origemEnum.id,
+                    value: origemEnum.value,
+                  },
+                ],
+              },
+              {
+                field_id: midiaFiled.id,
+                values: [
+                  {
+                    enum_id: midiaEnum.id,
+                    value: midiaEnum.value,
+                  },
+                ],
+              },
+              {
+                field_id: veiculoField,
+                values: [
+                  {
+                    value: carro,
+                  },
+                ],
               },
             ],
           },
-          custom_fields_values: [
-            {
-              field_id: origemField,
-              values: [
-                {
-                  value: "PORTAIS",
-                },
-              ],
-            },
-            {
-              field_id: veiculoField,
-              values: [
-                {
-                  value: carro,
-                },
-              ],
-            },
-          ],
-        },
-      ];
+        ];
 
-      const lead = await this.clienteModel.cadastrarLead(
-        JSON.stringify(bodyLead)
-      );
-      const leadId = lead._embedded.leads[0].id;
+        console.log("🔍", bodyLead);
 
-      const noteTextLead = `ℹ Novo Lead (ID ${leadId})
+        const lead = await this.clienteModel.cadastrarLead(
+          JSON.stringify(bodyLead)
+        );
+        const leadId = lead._embedded.leads[0].id;
 
-    ----
-    Dados do formulário preenchido:
+        const noteTextLead = `ℹ Novo Lead (ID ${leadId})
 
-    Veículo: ${carro}
-    Nome: ${nome}
-    Telefone: ${telefone}
-    Mensagem: Veja abaixo informações de um cliente que acessou o número de contato ou WhatsApp da sua loja.
+      ----
+      Dados do formulário preenchido:
 
-    ----
+      Veículo: ${carro}
+      Nome: ${nome}
+      Telefone: ${telefone}
+      Mensagem: Veja abaixo informações de um cliente que acessou o número de contato ou WhatsApp da sua loja.
 
-    Mídia: Portais
-    Origem: ${origem}
-    Anúncio: ${carro} - R$ ${valor}`;
+      ----
 
-      await this.clienteModel.adicionarNota({
-        leadId: leadId,
-        text: noteTextLead,
-        typeNote: "common",
-      });
+      Mídia: Portais
+      Origem: ${origem}
+      Anúncio: ${carro} - R$ ${valor}`;
 
-      console.log("Novo lead criado");
+        await this.clienteModel.adicionarNota({
+          leadId: leadId,
+          text: noteTextLead,
+          typeNote: "common",
+        });
+
+        console.log("Novo lead criado");
+      }
     }
   }
 }

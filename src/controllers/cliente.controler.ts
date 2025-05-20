@@ -220,7 +220,7 @@ const ClienteController = {
 
       if (existingPortal.length > 0) {
         return res.status(200).json({
-          success:false,
+          success: false,
           message: "Esse cliente já está cadastrado.",
         });
       }
@@ -415,7 +415,24 @@ const ClienteController = {
       res.status(200).json({ message: "Portal excluído com sucesso!" });
     } catch (error) {
       console.error(error);
-      res.status(500).json({ error: "Erro ao listar clientes." });
+      res.status(500).json({ error: "Erro ao excluir Portal." });
+    }
+  },
+  async excluirClienteTintim(req, res) {
+    try {
+      const { id } = req.params;
+      const response = await db(
+        "DELETE FROM tintim_unidades  WHERE id = $1 RETURNING *",
+        [id]
+      );
+      if (response.length === 0) {
+        return res.status(404).json({ error: "Tintim não encontrado." });
+      }
+
+      res.status(200).json({ message: "Tintim excluído com sucesso!" });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ error: "Erro ao excluir tintim." });
     }
   },
 

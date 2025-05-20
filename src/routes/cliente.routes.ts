@@ -79,6 +79,11 @@ router.delete(
   ClienteController.excluirClientePipeline
 );
 router.delete(
+  "/excluirClienteTintim/:id",
+  authenticateToken,
+  ClienteController.excluirClienteTintim
+);
+router.delete(
   "/excluirClientePortais/:id",
   authenticateToken,
   ClienteController.excluirClientePortais

@@ -11,7 +11,7 @@ const pool = new Pool({
   password: process.env.DB_PASSWORD,
   port: parseInt(process.env.DB_PORT || "5432", 10),
 });
-function descriptografarToken(token: string): string {
+export function descriptografarToken(token: string): string {
   const secretKey = process.env.SECRET_KEY as string;
   return CryptoJS.AES.decrypt(token, secretKey).toString(CryptoJS.enc.Utf8);
 }

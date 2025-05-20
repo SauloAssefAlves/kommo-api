@@ -39,6 +39,12 @@ router.get(
   authenticateToken,
   ClienteController.listarUnidadesTintim
 );
+
+router.get(
+  "/listarPortais",
+  authenticateToken,
+  ClienteController.listarPortais
+);
 // ----------- CADASTROS -----------
 router.post(
   "/cadastrar",
@@ -55,6 +61,11 @@ router.post(
   authenticateToken,
   ClienteController.cadastrarUnidadeTintim
 );
+router.post(
+  "/cadastrarPortais",
+  authenticateToken,
+  ClienteController.cadastrarClientePortais
+);
 
 // ----------- EXCLUIR -----------
 router.delete(
@@ -66,6 +77,11 @@ router.delete(
   "/excluirClientePipeline/:id",
   authenticateToken,
   ClienteController.excluirClientePipeline
+);
+router.delete(
+  "/excluirClientePortais/:id",
+  authenticateToken,
+  ClienteController.excluirClientePortais
 );
 
 export default router;

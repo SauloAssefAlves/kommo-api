@@ -66,6 +66,12 @@ router.post(
   authenticateToken,
   ClienteController.cadastrarClientePortais
 );
+// ----------- EDITS -----------
+router.put(
+  "/editarTintim/:id",
+  authenticateToken,
+  ClienteController.editarTintim
+);
 
 // ----------- EXCLUIR -----------
 router.delete(

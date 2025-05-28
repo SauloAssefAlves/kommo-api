@@ -3,6 +3,7 @@ import CryptoJS from "crypto-js";
 import dotenv from "dotenv";
 import axios from "axios";
 import { atualizarRotasPortais } from "../routes/portaisRoutes.js";
+import { atualizarRotasTintim } from "../routes/tintimWebhookRoutes.js";
 
 dotenv.config();
 
@@ -493,6 +494,43 @@ const ClienteController = {
       });
     } catch (err) {
       console.error("Erro ao cadastrar unidade:", err);
+      return res.status(500).json({
+        message: "Erro no servidor",
+        success: false,
+        error: err.message,
+      });
+    }
+  },
+  async editarTintim(req, res) {
+    const { nome, todas_unidades } = req.body;
+    const { id } = req.params;
+    console.log("ID:", id);
+    console.log("Nome:", nome);
+    console.log("Todas Unidades:", todas_unidades);
+    try {
+      const query = `
+  UPDATE tintim_unidades
+  SET unidade_formatada = $1, 
+      todas_unidades = $2
+      WHERE id = $3;
+`;
+
+      const values = [nome, todas_unidades, id];
+      const data = await db(query, values);
+      if (data.length === 0) {
+        return res.status(404).json({
+          message: "Tintim não encontrado",
+          success: false,
+        });
+      }
+
+      await atualizarRotasTintim();
+      return res.status(201).json({
+        message: "Tintim editado com sucesso",
+        success: true,
+      });
+    } catch (err) {
+      console.error("Erro ao editar Tintim:", err);
       return res.status(500).json({
         message: "Erro no servidor",
         success: false,

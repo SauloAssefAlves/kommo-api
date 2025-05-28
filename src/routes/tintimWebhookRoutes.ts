@@ -5,40 +5,45 @@ import { TintimWebhookController } from "../controllers/tintimWebhook.controller
 import { getClientesTintim } from "../config/database.js";
 
 const router = Router();
+export async function atualizarRotasTintim() {
+  const clientes = await getClientesTintim();
 
-const clientes = await getClientesTintim();
-clientes.forEach((cliente) => {
-  console.log("🔍", `/tintimWebhook/${cliente.nome}`);
-});
+  // Limpa todas as rotas existentes no router
+  router.stack = [];
 
-clientes.forEach((cliente) => {
-  const clienteModel = new KommoModel(cliente.cliente_nome, cliente.token);
+  clientes.forEach((cliente) => {
+    console.log("🔍", `/tintimWebhook/${cliente.nome}`);
 
-  router.post(
-    `/${cliente.nome}`,
-    async (req: Request, res: Response): Promise<any> => {
-      try {
-        await new TintimWebhookController(
-          clienteModel
-        ).atualizarFiledsWebhookTintim(req, res, cliente);
-        if (!res.headersSent) {
+    const clienteModel = new KommoModel(cliente.cliente_nome, cliente.token);
+
+    router.post(
+      `/${cliente.nome}`,
+      async (req: Request, res: Response): Promise<any> => {
+        try {
+          await new TintimWebhookController(
+            clienteModel
+          ).atualizarFiledsWebhookTintim(req, res, cliente);
+          console.log("🔍 Cliente:", cliente.nome);
           return res.status(200).json({
             success: true,
             message: "Webhook processado com sucesso",
           });
-        }
-        console.log("🔍 Cliente:", cliente.nome);
-      } catch (error) {
-        if (!res.headersSent) {
-          return res.status(200).json({
+        } catch (error) {
+          console.log("X Cliente:", cliente.nome);
+          console.log("Erro:", error);
+          return res.status(500).json({
             success: false,
             message: "Erro ao processar o webhook",
           });
         }
-        console.log("X Cliente:", cliente.nome);
       }
-    }
-  );
-});
+    );
+  });
+}
+
+// Chamada inicial para configurar as rotas
+atualizarRotasTintim().catch((error) =>
+  console.error("Erro ao atualizar rotas:", error)
+);
 
 export default router;

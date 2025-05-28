@@ -16,11 +16,11 @@ export function descriptografarToken(token: string): string {
   return CryptoJS.AES.decrypt(token, secretKey).toString(CryptoJS.enc.Utf8);
 }
 
-export const db = async (text: string, params?: any[]) => {
+export const db = async (text: string, params?: any[]): Promise<any[]> => {
   const client = await pool.connect();
   try {
     const res = await client.query(text, params);
-    return res.rows;
+    return res.rows; // Este é o valor retornado pela função
   } finally {
     client.release();
   }

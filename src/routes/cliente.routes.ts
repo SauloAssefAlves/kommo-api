@@ -72,6 +72,11 @@ router.put(
   authenticateToken,
   ClienteController.editarTintim
 );
+router.put(
+  "/editarPortal/:id",
+  authenticateToken,
+  ClienteController.editarPortais
+);
 
 // ----------- EXCLUIR -----------
 router.delete(

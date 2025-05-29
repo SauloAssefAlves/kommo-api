@@ -208,6 +208,12 @@ const ClienteController = {
   async cadastrarClientePortais(req, res) {
     try {
       const { cliente_id, pipeline_id, status_id, nome } = req.body;
+      console.log("Dados recebidos:", {
+        cliente_id,
+        pipeline_id,
+        status_id,
+        nome,
+      });
 
       if (!cliente_id || !pipeline_id || !status_id || !nome) {
         return res.status(400).json({ error: "Dados inválidos." });
@@ -363,6 +369,8 @@ const ClienteController = {
                 token: undefined,
                 pipeline: pipeline_name,
                 status_pipeline: status_pipeline_name,
+                pipeline_id: cliente.pipeline_id,
+                status_id: cliente.status_id,
               };
 
               return data_2;
@@ -517,7 +525,7 @@ const ClienteController = {
 
       const values = [nome, todas_unidades, id];
       const data = await db(query, values);
-      if (data.length === 0) {
+      if (!data) {
         return res.status(404).json({
           message: "Tintim não encontrado",
           success: false,
@@ -538,6 +546,42 @@ const ClienteController = {
       });
     }
   },
+  async editarPortais(req, res) {
+    const { pipeline, status_pipeline } = req.body;
+    const { id } = req.params;
+    try {
+      const query = `
+  UPDATE clientes_portais
+  SET pipeline = $1, 
+      status_pipeline = $2
+      WHERE id = $3;
+`;
+
+      const values = [pipeline, status_pipeline, id];
+      const data = await db(query, values);
+      if (!data) {
+        return res.status(404).json({
+          message: "Portal não encontrado",
+          success: false,
+        });
+      }
+
+      await atualizarRotasPortais();
+      return res.status(201).json({
+        message: "Portal editado com sucesso",
+        success: true,
+      });
+    } catch (err) {
+      console.error("Erro ao editar Portal:", err);
+      return res.status(500).json({
+        message: "Erro no servidor",
+        success: false,
+        error: err.message,
+      });
+    }
+  },
 };
+
+
 
 export default ClienteController;

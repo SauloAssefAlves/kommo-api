@@ -24,10 +24,6 @@ export async function atualizarRotasTintim() {
             clienteModel
           ).atualizarFiledsWebhookTintim(req, res, cliente);
           console.log("🔍 Cliente:", cliente.nome);
-          return res.status(200).json({
-            success: true,
-            message: "Webhook processado com sucesso",
-          });
         } catch (error) {
           console.log("X Cliente:", cliente.nome);
           console.log("Erro:", error);

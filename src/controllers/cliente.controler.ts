@@ -10,22 +10,21 @@ dotenv.config();
 const ClienteController = {
   async cadastrarCliente(req, res) {
     try {
-      const { nome, token } = req.body;
+      const { nome, token, automotivo } = req.body;
       const secretKey = process.env.SECRET_KEY;
 
       // Verifica se o cliente já existe
-      const clientes = await db(
-        "SELECT * FROM clientes WHERE nome = $1", // use $1 para parâmetros com PostgreSQL
-        [nome]
-      );
+      const clientes = await db("SELECT * FROM clientes WHERE nome = $1", [
+        nome,
+      ]);
       if (clientes.length > 0) {
         return res.status(400).json({ error: "Cliente já cadastrado." });
       }
       const encryptedToken = CryptoJS.AES.encrypt(token, secretKey).toString();
       // Insere o cliente no banco de dados
       const [result] = await db(
-        "INSERT INTO clientes (nome, token) VALUES ($1, $2) RETURNING *", // use $1 e $2 para parâmetros
-        [nome, encryptedToken]
+        "INSERT INTO clientes (nome, token, automotivo) VALUES ($1, $2, $3) RETURNING *",
+        [nome, encryptedToken, automotivo]
       );
 
       res.status(201).json({ id: result.insertId, nome });
@@ -34,6 +33,29 @@ const ClienteController = {
       res.status(500).json({ error: "Erro ao cadastrar cliente." });
     }
   },
+
+  async editarCliente(req, res) {
+    try {
+      const { nome, token, automotivo } = req.body;
+      const { id } = req.params;
+
+      const secretKey = process.env.SECRET_KEY;
+      const encryptedToken = CryptoJS.AES.encrypt(token, secretKey).toString();
+
+      const [result] = await db(
+        ` UPDATE clientes
+    SET nome = $1, token = $2, automotivo = $3
+    WHERE id = $4`,
+        [nome, encryptedToken, automotivo, id]
+      );
+
+      res.status(201).json({ id: result.insertId, nome });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ error: "Erro ao editar cliente." });
+    }
+  },
+
   async listarClientes(req, res) {
     try {
       const clientes = await db("SELECT * FROM clientes");

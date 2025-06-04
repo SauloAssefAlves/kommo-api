@@ -68,6 +68,11 @@ router.post(
 );
 // ----------- EDITS -----------
 router.put(
+  "/editarCliente/:id",
+  authenticateToken,
+  ClienteController.editarCliente
+);
+router.put(
   "/editarTintim/:id",
   authenticateToken,
   ClienteController.editarTintim

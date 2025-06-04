@@ -45,7 +45,7 @@ export const getClientesTintim = async () => {
 
 export const getClientesPortais = async () => {
   const response = await db(
-    `select c.nome , cp.nome as unidade_nome, cp.pipeline, cp.status_pipeline , c.token from clientes_portais cp inner join clientes c on c.id = cp.empresa_id`
+    `select c.nome , cp.nome as unidade_nome, cp.pipeline, cp.status_pipeline , c.token, cp.type from clientes_portais cp inner join clientes c on c.id = cp.empresa_id`
   );
   return response.map((cliente) => {
     return {
@@ -54,6 +54,7 @@ export const getClientesPortais = async () => {
       pipeline_id: cliente.pipeline,
       cliente_nome: cliente.unidade_nome,
       status_id: cliente.status_pipeline,
+      type: cliente.type,
     };
   });
 };

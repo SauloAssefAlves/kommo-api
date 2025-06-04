@@ -349,6 +349,27 @@ export class KommoModel {
       return null;
     }
   }
+  async cadastrarLeadIncomingLeads(body): Promise<any | null> {
+    try {
+      const response = await this.api.post("/leads/unsorted/forms", body);
+      const uid = response.data._embedded.unsorted[0].uid;
+      const accepted = await this.api.post(`/leads/unsorted/${uid}/accept`);
+      return accepted.data;
+    } catch (error) {
+      if (error.response?.data?.["validation-errors"]) {
+        console.error(
+          "❌ Erro ao cadastrar lead incoming:",
+          error.response.data["validation-errors"][0].errors
+        );
+      } else {
+        console.error(
+          "❌ Erro ao cadastrar lead incoming:",
+          error.response?.data || error
+        );
+      }
+      return null;
+    }
+  }
   async getPipelines(): Promise<any | null> {
     try {
       const response = await this.api.get("/leads/pipelines");

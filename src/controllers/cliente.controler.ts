@@ -159,6 +159,7 @@ const ClienteController = {
                 id: status.id,
                 nome: status.name,
                 is_editable: status.is_editable,
+                type: status.type,
               };
             }),
           };
@@ -207,12 +208,13 @@ const ClienteController = {
 
   async cadastrarClientePortais(req, res) {
     try {
-      const { cliente_id, pipeline_id, status_id, nome } = req.body;
+      const { cliente_id, pipeline_id, status_id, nome, type } = req.body;
       console.log("Dados recebidos:", {
         cliente_id,
         pipeline_id,
         status_id,
         nome,
+        type,
       });
 
       if (!cliente_id || !pipeline_id || !status_id || !nome) {
@@ -235,10 +237,10 @@ const ClienteController = {
       // Inserir a nova portal
       await db(
         `
-      INSERT INTO clientes_portais (empresa_id, nome, pipeline, status_pipeline)
-      VALUES ($1, $2, $3, $4)
+      INSERT INTO clientes_portais (empresa_id, nome, pipeline, status_pipeline, type)
+      VALUES ($1, $2, $3, $4, $5)
        `,
-        [cliente_id, nome, pipeline_id, status_id]
+        [cliente_id, nome, pipeline_id, status_id, type]
       );
 
       await atualizarRotasPortais();
@@ -547,17 +549,18 @@ const ClienteController = {
     }
   },
   async editarPortais(req, res) {
-    const { pipeline, status_pipeline } = req.body;
+    const { pipeline, status_pipeline, status_type } = req.body;
     const { id } = req.params;
     try {
       const query = `
   UPDATE clientes_portais
   SET pipeline = $1, 
-      status_pipeline = $2
-      WHERE id = $3;
+      status_pipeline = $2,
+      type = $3
+      WHERE id = $4;
 `;
 
-      const values = [pipeline, status_pipeline, id];
+      const values = [pipeline, status_pipeline, status_type, id];
       const data = await db(query, values);
       if (!data) {
         return res.status(404).json({
@@ -581,7 +584,5 @@ const ClienteController = {
     }
   },
 };
-
-
 
 export default ClienteController;

@@ -49,11 +49,11 @@ export class PortaisController {
   ): Promise<any> {
     const pipeline_id = Number(cliente.pipeline_id);
     const status_id = cliente.status_id;
+    const type_status = cliente.type;
     const html = req.body.html;
     // const text = req.body[0].text;
     const address = req.body.from.address;
     const origem = await this.obterOrigem(address);
-    console.log("🔍", origem);
 
     const maxRetries = 5;
     let attempts = 0;
@@ -152,10 +152,8 @@ export class PortaisController {
       Origem: ${origem}
       Anúncio: ${carro} - R$ ${valor}`;
 
-    console.log("🔍", leadExistente);
     if (leadExistente) {
       const { id } = leadExistente;
-      console.log("asdas");
       await this.clienteModel.adicionarNota({
         leadId: id,
         text: noteText,
@@ -230,27 +228,68 @@ export class PortaisController {
 
       // -------------------- CASO NÃO TENHA OS CAMPOS PADRÕES --------------------
       if (!origemField || !midiaFiled || !veiculoField) {
-        const bodyLeadSemCamposPadroes = [
-          {
-            name: nome,
-            price: parseInt(valor, 10),
-            status_id: status_id,
-            pipeline_id: pipeline_id,
-            _embedded: {
-              contacts: [
-                {
-                  id: contactId,
-                },
-              ],
+        let leadId: number;
+        if (type_status === 1) {
+          const bodyLead = [
+            {
+              source_uid: "custom_api_form",
+              source_name: "Formulário do Site",
+              pipeline_id: pipeline_id,
+              metadata: {
+                form_sent_at: Date.now(),
+                category: "forms",
+                form_id: "form-site-contato",
+                form_name: "Formulário de Contato",
+                form_page: "https://meusite.com/contato",
+                referer: "https://meusite.com/",
+                ip: "192.168.0.1",
+              },
+              _embedded: {
+                leads: [
+                  {
+                    name: nome,
+                    price: parseInt(valor, 10),
+                    pipeline_id: pipeline_id,
+                    _embedded: {
+                      contacts: [
+                        {
+                          id: contactId,
+                        },
+                      ],
+                    },
+                  },
+                ],
+              },
             },
-          },
-        ];
-        const lead = await this.clienteModel.cadastrarLead(
-          JSON.stringify(bodyLeadSemCamposPadroes)
-        );
+          ];
 
-        const leadId = lead._embedded.leads[0].id;
+          const lead = await this.clienteModel.cadastrarLeadIncomingLeads(
+            JSON.stringify(bodyLead)
+          );
+          leadId = lead._embedded.leads[0].id;
+          console.log("🚀 Incoming Lead criado com sucesso:", lead);
+        } else {
+          const bodyLeadSemCamposPadroes = [
+            {
+              name: nome,
+              price: parseInt(valor, 10),
+              status_id: status_id,
+              pipeline_id: pipeline_id,
+              _embedded: {
+                contacts: [
+                  {
+                    id: contactId,
+                  },
+                ],
+              },
+            },
+          ];
+          const lead = await this.clienteModel.cadastrarLead(
+            JSON.stringify(bodyLeadSemCamposPadroes)
+          );
 
+          leadId = lead._embedded.leads[0].id;
+        }
         const noteTextLead = `ℹ Novo Lead (ID ${leadId})
 
         ----
@@ -283,57 +322,126 @@ export class PortaisController {
         const midiaEnum = midiaFiled.enums.find(
           (enumItem: any) => enumItem.value === "Portais"
         );
-        const bodyLead = [
-          {
-            name: nome,
-            price: parseInt(valor, 10),
-            status_id: status_id,
-            pipeline_id: pipeline_id,
-            _embedded: {
-              contacts: [
+        let leadId: number;
+        if (type_status === 1) {
+          const bodyLead = [
+            {
+              source_uid: "custom_api_form",
+              source_name: "Formulário do Site",
+              pipeline_id: pipeline_id,
+              metadata: {
+                form_sent_at: Date.now(),
+                category: "forms",
+                form_id: "form-site-contato",
+                form_name: "Formulário de Contato",
+                form_page: "https://meusite.com/contato",
+                referer: "https://meusite.com/",
+                ip: "192.168.0.1",
+              },
+              _embedded: {
+                leads: [
+                  {
+                    name: nome,
+                    price: parseInt(valor, 10),
+                    pipeline_id: pipeline_id,
+                    _embedded: {
+                      contacts: [
+                        {
+                          id: contactId,
+                        },
+                      ],
+                    },
+                    custom_fields_values: [
+                      {
+                        field_id: origemField.id,
+                        values: [
+                          {
+                            enum_id: origemEnum.id,
+                            value: origemEnum.value,
+                          },
+                        ],
+                      },
+                      {
+                        field_id: midiaFiled.id,
+                        values: [
+                          {
+                            enum_id: midiaEnum.id,
+                            value: midiaEnum.value,
+                          },
+                        ],
+                      },
+                      {
+                        field_id: veiculoField,
+                        values: [
+                          {
+                            value: carro,
+                          },
+                        ],
+                      },
+                    ],
+                  },
+                ],
+              },
+            },
+          ];
+
+          const lead = await this.clienteModel.cadastrarLeadIncomingLeads(
+            JSON.stringify(bodyLead)
+          );
+
+          console.log("🚀 Incoming Lead criado com sucesso:", lead);
+          leadId = lead._embedded.leads[0].id;
+        } else {
+          const bodyLead = [
+            {
+              name: nome,
+              price: parseInt(valor, 10),
+              status_id: status_id,
+              pipeline_id: pipeline_id,
+              _embedded: {
+                contacts: [
+                  {
+                    id: contactId,
+                  },
+                ],
+              },
+              custom_fields_values: [
                 {
-                  id: contactId,
+                  field_id: origemField.id,
+                  values: [
+                    {
+                      enum_id: origemEnum.id,
+                      value: origemEnum.value,
+                    },
+                  ],
+                },
+                {
+                  field_id: midiaFiled.id,
+                  values: [
+                    {
+                      enum_id: midiaEnum.id,
+                      value: midiaEnum.value,
+                    },
+                  ],
+                },
+                {
+                  field_id: veiculoField,
+                  values: [
+                    {
+                      value: carro,
+                    },
+                  ],
                 },
               ],
             },
-            custom_fields_values: [
-              {
-                field_id: origemField.id,
-                values: [
-                  {
-                    enum_id: origemEnum.id,
-                    value: origemEnum.value,
-                  },
-                ],
-              },
-              {
-                field_id: midiaFiled.id,
-                values: [
-                  {
-                    enum_id: midiaEnum.id,
-                    value: midiaEnum.value,
-                  },
-                ],
-              },
-              {
-                field_id: veiculoField,
-                values: [
-                  {
-                    value: carro,
-                  },
-                ],
-              },
-            ],
-          },
-        ];
+          ];
 
-        console.log("🔍", bodyLead);
 
-        const lead = await this.clienteModel.cadastrarLead(
-          JSON.stringify(bodyLead)
-        );
-        const leadId = lead._embedded.leads[0].id;
-
+          const lead = await this.clienteModel.cadastrarLead(
+            JSON.stringify(bodyLead)
+          );
+           leadId = lead._embedded.leads[0].id;
+        }
         const noteTextLead = `ℹ Novo Lead (ID ${leadId})
 
         ----

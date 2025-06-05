@@ -50,7 +50,7 @@ export class PortaisController {
     const pipeline_id = Number(cliente.pipeline_id);
     const status_id = cliente.status_id;
     const type_status = cliente.type;
-    const html = req.body.html;
+    const html = Buffer.from(req.body.html, "base64").toString();
     // const text = req.body[0].text;
     const address = req.body.from.address;
     const origem = await this.obterOrigem(address);
@@ -436,11 +436,10 @@ export class PortaisController {
             },
           ];
 
-
           const lead = await this.clienteModel.cadastrarLead(
             JSON.stringify(bodyLead)
           );
-           leadId = lead._embedded.leads[0].id;
+          leadId = lead._embedded.leads[0].id;
         }
         const noteTextLead = `ℹ Novo Lead (ID ${leadId})
 

@@ -1,30 +1,45 @@
 import pkg from "pg";
 import dotenv from "dotenv";
-import CryptoJS from "crypto-js";
+import CryptoJS from "crypto-js"; // (Você pode remover se não usar neste arquivo)
+
 dotenv.config();
+
 const { Pool } = pkg;
 
+// Configuração mais robusta do pool
 const pool = new Pool({
   user: process.env.DB_USER,
   host: process.env.DB_HOST,
   database: process.env.DB_NAME,
   password: process.env.DB_PASSWORD,
   port: parseInt(process.env.DB_PORT || "5432", 10),
+  max: 10, // Limita o número de conexões simultâneas
+  idleTimeoutMillis: 10000, // Fecha conexões ociosas após 10s
+  connectionTimeoutMillis: 2000, // Timeout para tentar nova conexão
 });
-export function descriptografarToken(token: string): string {
-  const secretKey = process.env.SECRET_KEY as string;
-  return CryptoJS.AES.decrypt(token, secretKey).toString(CryptoJS.enc.Utf8);
-}
 
+// Função de consulta ao banco com tratamento de erro
 export const db = async (text: string, params?: any[]): Promise<any[]> => {
   const client = await pool.connect();
   try {
     const res = await client.query(text, params);
-    return res.rows; // Este é o valor retornado pela função
+    return res.rows;
+  } catch (err) {
+    console.error("Erro na consulta ao banco:", {
+      query: text,
+      params,
+      error: err,
+    });
+    throw err; // Repassa o erro para tratamento no nível superior
   } finally {
     client.release();
   }
 };
+
+export function descriptografarToken(token: string): string {
+  const secretKey = process.env.SECRET_KEY as string;
+  return CryptoJS.AES.decrypt(token, secretKey).toString(CryptoJS.enc.Utf8);
+}
 
 export const getClientesTintim = async () => {
   const response = await db(

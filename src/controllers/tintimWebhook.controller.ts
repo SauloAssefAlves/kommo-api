@@ -63,104 +63,94 @@ export class TintimWebhookController {
   ) {
     const webhookData = req.body;
     console.log("Webhook recebido");
-    const contador = cliente.contador;
-    if (webhookData.source != "Meta Ads") {
-      console.log("❌ Webhook não rastreável");
-      return res
-        .status(200)
-        .json({ message: "Webhook ignorado, mas recebido." });
-    }
-    const evoUser = await this.clienteModel.buscarUsuarioPorNome("EVO Result");
-    const telefone = webhookData?.phone;
 
-    const source = webhookData?.source;
-    const { campaign_name, adset_name, ad_name } = webhookData?.ad || {};
+    // ✅ Responde imediatamente ao Tintim
+    res
+      .status(200)
+      .json({ message: "✅ Webhook recebido. Processamento em background." });
 
-    const campaing_name_tratado = campaign_name
-      ? campaign_name.replace(/🅔🅥🅞|\bEVO\b/g, "").trim()
-      : "";
+    // ⚠️ A partir daqui, o processamento é feito de forma assíncrona
+    try {
+      const contador = cliente.contador;
 
-    const lead = await this.buscarLeadComTentativas(telefone);
+      if (webhookData.source != "Meta Ads") {
+        console.log("❌ Webhook não rastreável");
+        return;
+      }
 
-    if (!lead) {
-      console.log("⚠️ Lead não encontrado para o webhook recebido.");
-      return res
-        .status(200)
-        .json({ message: "Webhook recebido, mas lead não encontrado." });
-    }
+      const evoUser = await this.clienteModel.buscarUsuarioPorNome(
+        "EVO Result"
+      );
+      const telefone = webhookData?.phone;
+      const source = webhookData?.source;
+      const { campaign_name, adset_name, ad_name } = webhookData?.ad || {};
 
-    // Alternando entre "Facebook ADS" e "Instagram"
-    const midia = contador % 2 === 0 ? "Facebook ADS" : "Instagram ADS";
-    await incrementarContadorUnidade(cliente.id);
+      const campaing_name_tratado = campaign_name
+        ? campaign_name.replace(/🅔🅥🅞|\bEVO\b/g, "").trim()
+        : "";
 
-    const camposNames = [
-      { nomeCampo: "Origem", enumNome: "WhatsApp" },
-      { nomeCampo: "Midia", enumNome: midia }, // Aqui alteramos a midia
-      {
-        nomeCampo: "Campanha (1° Impacto)", // campaing_name
-      },
-      {
-        nomeCampo: "Conjunto de anúncio (1° Impacto)", // adset_name
-      },
-      {
-        nomeCampo: "Anúncio (1° Impacto)", // ad_name
-      },
-      {
-        nomeCampo: "Data da primeira conversão", // new Date()
-      },
-      {
-        nomeCampo: "Lead veio de ADS",
-        enumNome: "Sim", // sim
-      },
-      {
-        nomeCampo: "Tipo Lead",
-        enumNome: "Inbound", // Inbound
-      },
-    ];
-    const camposPersonalizados =
-      await this.clienteModel.buscarIdsPorNomesCampos(camposNames);
-    const body = {
-      custom_fields_values: camposPersonalizados.map((campo) => {
-        let fieldValue: any;
+      const lead = await this.buscarLeadComTentativas(telefone);
 
-        if (campo.type === "select") {
-          // Se for um campo SELECT, usa enumId e adiciona enum_code como null
-          fieldValue = {
-            value: campo.enumNome,
-            enum_id: campo.enumId,
-            enum_code: null,
-          };
-        } else if (campo.type === "date_time") {
-          // Se for um campo DATE_TIME, transforma em timestamp
-          fieldValue = { value: Math.floor(Date.now() / 1000) }; // Timestamp em segundos
-        } else {
-          if (webhookData.ad) {
-            if (campo.nome === "Campanha (1° Impacto)") {
-              fieldValue = { value: campaing_name_tratado };
-            } else if (campo.nome === "Conjunto de anúncio (1° Impacto)") {
-              fieldValue = { value: adset_name };
-            } else if (campo.nome === "Anúncio (1° Impacto)") {
-              fieldValue = { value: ad_name };
+      if (!lead) {
+        console.log("⚠️ Lead não encontrado para o webhook recebido.");
+        return;
+      }
+
+      const midia = contador % 2 === 0 ? "Facebook ADS" : "Instagram ADS";
+      await incrementarContadorUnidade(cliente.id);
+
+      const camposNames = [
+        { nomeCampo: "Origem", enumNome: "WhatsApp" },
+        { nomeCampo: "Midia", enumNome: midia },
+        { nomeCampo: "Campanha (1° Impacto)" },
+        { nomeCampo: "Conjunto de anúncio (1° Impacto)" },
+        { nomeCampo: "Anúncio (1° Impacto)" },
+        { nomeCampo: "Data da primeira conversão" },
+        { nomeCampo: "Lead veio de ADS", enumNome: "Sim" },
+        { nomeCampo: "Tipo Lead", enumNome: "Inbound" },
+      ];
+
+      const camposPersonalizados =
+        await this.clienteModel.buscarIdsPorNomesCampos(camposNames);
+
+      const body = {
+        custom_fields_values: camposPersonalizados.map((campo) => {
+          let fieldValue: any;
+
+          if (campo.type === "select") {
+            fieldValue = {
+              value: campo.enumNome,
+              enum_id: campo.enumId,
+              enum_code: null,
+            };
+          } else if (campo.type === "date_time") {
+            fieldValue = { value: Math.floor(Date.now() / 1000) };
+          } else {
+            if (webhookData.ad) {
+              if (campo.nome === "Campanha (1° Impacto)") {
+                fieldValue = { value: campaing_name_tratado };
+              } else if (campo.nome === "Conjunto de anúncio (1° Impacto)") {
+                fieldValue = { value: adset_name };
+              } else if (campo.nome === "Anúncio (1° Impacto)") {
+                fieldValue = { value: ad_name };
+              }
             }
           }
-        }
 
-        return {
-          field_id: campo.id, // ID do campo no Kommo
-          values: [fieldValue], // Sempre precisa estar dentro de um array
-        };
-      }),
-    };
+          return {
+            field_id: campo.id,
+            values: [fieldValue],
+          };
+        }),
+      };
 
-    const textTask = `LEAD FEZ UMA NOVA CONVERSÃO DE ADS
-                  Campanha: ${campaing_name_tratado}
-                  Conjunto: ${adset_name ? adset_name : ""}
-                  Anúncio: ${ad_name ? ad_name : ""}`;
-    const textNote = `- LEAD FEZ UMA NOVA CONVERSÃO DE ADS - Campanha: ${campaing_name_tratado} Conjunto: ${
-      adset_name ? adset_name : ""
-    } Anúncio: ${ad_name ? ad_name : ""}`;
-    try {
-      // Atualizando campos do lead
+      const textTask = `LEAD FEZ UMA NOVA CONVERSÃO DE ADS\nCampanha: ${campaing_name_tratado}\nConjunto: ${
+        adset_name ?? ""
+      }\nAnúncio: ${ad_name ?? ""}`;
+      const textNote = `- LEAD FEZ UMA NOVA CONVERSÃO DE ADS - Campanha: ${campaing_name_tratado} Conjunto: ${
+        adset_name ?? ""
+      } Anúncio: ${ad_name ?? ""}`;
+
       await Promise.all([
         this.clienteModel.api.patch(`/leads/${lead.id}`, body),
         this.clienteModel.adicionarTask({
@@ -174,14 +164,10 @@ export class TintimWebhookController {
           text: textNote,
         }),
       ]);
-      console.log("LEAD ATUALIZADO COM SUCESSO", lead.id, lead.name);
-      return res
-        .status(200)
-        .json({ message: "✅ Webhook recebido com sucesso!!!!" });
-    } catch (error) {
-      console.error("❌ Erro ao atualizar lead:", error);
-    }
 
-    // console.log("📤 Resposta do Kommo:", response);
+      console.log("✅ LEAD ATUALIZADO COM SUCESSO", lead.id, lead.name);
+    } catch (error) {
+      console.error("❌ Erro ao processar webhook:", error);
+    }
   }
 }

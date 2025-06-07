@@ -13,6 +13,7 @@ export class KommoModel {
   constructor(private subdomain: string, private token: string) {
     this.api = axios.create({
       baseURL: `https://${this.subdomain}.kommo.com/api/v4`,
+      timeout: 10000,
       headers: {
         Authorization: `Bearer ${this.token}`,
         "Content-Type": "application/json",

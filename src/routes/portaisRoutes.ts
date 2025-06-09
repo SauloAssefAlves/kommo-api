@@ -4,22 +4,26 @@ import { PortaisController } from "../controllers/portais.controller.js";
 import { getClientesPortais } from "../config/database.js";
 
 const router = Router();
-
+const activeModels = new Map<string, KommoModel>();
 // Função para atualizar as rotas dinamicamente
 export async function atualizarRotasPortais() {
   const clientesPortais = await getClientesPortais();
 
   // Limpa todas as rotas existentes no router
   router.stack = [];
+  activeModels.forEach((model) => model.destroy());
+  activeModels.clear();
 
   clientesPortais.forEach((cliente) => {
     console.log("🔍", `/portais/${cliente.nome}`);
 
-    const clienteModel = new KommoModel(cliente.cliente_nome, cliente.token);
-
     router.post(
       `/${cliente.nome}`,
       async (req: Request, res: Response): Promise<any> => {
+        const clienteModel = new KommoModel(
+          cliente.cliente_nome,
+          cliente.token
+        );
         try {
           await new PortaisController(
             clienteModel
@@ -36,6 +40,8 @@ export async function atualizarRotasPortais() {
             success: false,
             message: "Erro ao processar o webhook do portal",
           });
+        } finally {
+          console.log("🛑 Finalizando processamento do webhook.");
         }
       }
     );

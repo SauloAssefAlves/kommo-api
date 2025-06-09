@@ -3,6 +3,26 @@ import { Response, Request } from "express";
 import openai from "../config/openai.js";
 export class PortaisController {
   constructor(private clienteModel: KommoModel) {}
+  private tratarTelefone(telefone: string): string {
+    let numero = telefone;
+
+    // Remove o DDI (assumindo que o DDI tem até 3 dígitos no início)
+    if (numero.length > 11) {
+      numero = numero.slice(-11);
+    }
+
+    // Remove o 9 após o DDD, se aplicável
+    if (numero.length === 11 && numero[2] === "9") {
+      numero = numero.slice(0, 2) + numero.slice(3);
+    }
+
+    if (numero.length === 9 && numero[0] === "9") {
+      numero = numero.slice(1);
+    }
+
+    console.log("🔍 Telefone tratado:", numero);
+    return numero;
+  }
   async obterOrigem(fromAddress: string): Promise<string> {
     let origem: string;
 
@@ -62,7 +82,7 @@ export class PortaisController {
     while (attempts < maxRetries) {
       try {
         const response = await openai.chat.completions.create({
-          model: "gpt-4o-mini", // pode usar "gpt-3.5-turbo" se preferir
+          model: "gpt-4o-mini",
           messages: [
             {
               role: "system",
@@ -81,7 +101,6 @@ export class PortaisController {
           ],
         });
 
-        // Remove aspas desnecessárias do JSON retornado
         const rawContent = response.choices[0].message.content;
         const cleanedContent = rawContent.replace(/“|”|```|json/g, "").trim();
         extractedData = JSON.parse(cleanedContent);
@@ -107,30 +126,7 @@ export class PortaisController {
     }
     const { nome, telefone, carro, valor, email } = extractedData;
 
-    // Remove o DDI, mantém o DDD e remove o 9 após o DDD, caso tenha
-    const tratarTelefone = (telefone: string): string => {
-      // Remove caracteres não numéricos
-      let numero = telefone;
-
-      // Remove o DDI (assumindo que o DDI tem até 3 dígitos no início)
-      if (numero.length > 11) {
-        numero = numero.slice(-11);
-      }
-
-      // Verifica se o número tem 11 dígitos e começa com o 9 após o DDD
-      if (numero.length === 11 && numero[2] === "9") {
-        numero = numero.slice(0, 2) + numero.slice(3); // Remove o 9 após o DDD
-      }
-
-      if (numero.length === 9 && numero[0] === "9") {
-        numero = numero.slice(1); // Remove o 9 inicial
-      }
-
-      console.log("🔍", numero);
-      return numero;
-    };
-
-    const telefoneTratado = tratarTelefone(telefone);
+    const telefoneTratado = this.tratarTelefone(telefone);
 
     const leadExistente = await this.clienteModel.buscarLeadPorTelefone(
       telefoneTratado
@@ -159,6 +155,7 @@ export class PortaisController {
         text: noteText,
         typeNote: "common",
       });
+      return;
     } else {
       const customFiledsLead = await this.clienteModel.getCustomfields({
         entity_type: "leads",

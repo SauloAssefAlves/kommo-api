@@ -8,32 +8,32 @@ const router = Router();
 export async function atualizarRotasTintim() {
   const clientes = await getClientesTintim();
 
+  // Remove duplicates (if any)
+  const uniqueClientes = Array.from(
+    new Map(clientes.map((c) => [c.nome, c])).values()
+  );
+
   // Limpa todas as rotas existentes no router
   router.stack = [];
 
-  clientes.forEach((cliente) => {
+  const activeControllers = new WeakMap();
+
+  uniqueClientes.forEach((cliente) => {
     console.log("🔍", `/tintimWebhook/${cliente.nome}`);
 
-    const clienteModel = new KommoModel(cliente.cliente_nome, cliente.token);
+    router.post(`/${cliente.nome}`, async (req, res) => {
+      const controller = new TintimWebhookController(
+        cliente.nome,
+        cliente.token
+      );
+      activeControllers.set(controller, true);
 
-    router.post(
-      `/${cliente.nome}`,
-      async (req: Request, res: Response): Promise<any> => {
-        try {
-          await new TintimWebhookController(
-            clienteModel
-          ).atualizarFiledsWebhookTintim(req, res, cliente);
-          console.log("🔍 Cliente:", cliente.nome);
-        } catch (error) {
-          console.log("X Cliente:", cliente.nome);
-          console.log("Erro:", error);
-          return res.status(500).json({
-            success: false,
-            message: "Erro ao processar o webhook",
-          });
-        }
+      try {
+        await controller.atualizarFiledsWebhookTintim(req, res, cliente);
+      } finally {
+        activeControllers.delete(controller);
       }
-    );
+    });
   });
 }
 

@@ -5,12 +5,13 @@ import { incrementarContadorUnidade } from "../config/database.js";
 export class TintimWebhookController {
   public clienteModel: KommoModel;
 
-  constructor(clienteModel: KommoModel) {
-    this.clienteModel = clienteModel;
+  constructor(subdomain: string, token: string) {
+    this.clienteModel = KommoModel.getInstance(subdomain, token);
   }
 
   private async buscarLeadComTentativas(telefone: string): Promise<any> {
     const delays = [5000, 10000, 15000, 20000]; // 5s, 10s, 20s
+    let lead: any = null;
     let formattedPhone = telefone
 
       .replace(/^55/, "")
@@ -19,7 +20,7 @@ export class TintimWebhookController {
       });
 
     for (let i = 0; i < delays.length; i++) {
-      let lead = await this.clienteModel.buscarLeadPorTelefone(formattedPhone);
+      lead = await this.clienteModel.buscarLeadPorTelefone(formattedPhone);
 
       if (lead) {
         return lead;
@@ -62,7 +63,7 @@ export class TintimWebhookController {
     cliente: any
   ) {
     const webhookData = req.body;
-    console.log("Webhook recebido");
+    console.log("✅ Webhook recebido");
 
     // ✅ Responde imediatamente ao Tintim
     res
@@ -75,6 +76,7 @@ export class TintimWebhookController {
 
       if (webhookData.source != "Meta Ads") {
         console.log("❌ Webhook não rastreável");
+        this.clienteModel.destroy();
         return;
       }
 
@@ -93,6 +95,7 @@ export class TintimWebhookController {
 
       if (!lead) {
         console.log("⚠️ Lead não encontrado para o webhook recebido.");
+        this.clienteModel.destroy();
         return;
       }
 
@@ -166,8 +169,10 @@ export class TintimWebhookController {
       ]);
 
       console.log("✅ LEAD ATUALIZADO COM SUCESSO", lead.id, lead.name);
+      this.clienteModel.destroy();
     } catch (error) {
       console.error("❌ Erro ao processar webhook:", error);
+      this.clienteModel.destroy();
     }
   }
 }

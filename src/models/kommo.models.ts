@@ -1,5 +1,7 @@
 import axios, { AxiosInstance } from "axios";
 import { query } from "express";
+import * as http from "http";
+import * as https from "https";
 
 export interface Cliente {
   id: number;
@@ -10,10 +12,14 @@ export interface Cliente {
 
 export class KommoModel {
   public api: AxiosInstance;
+  private static instances: Map<string, KommoModel> = new Map();
+
   constructor(private subdomain: string, private token: string) {
     this.api = axios.create({
       baseURL: `https://${this.subdomain}.kommo.com/api/v4`,
       timeout: 10000,
+      httpAgent: new http.Agent({ keepAlive: false }),
+      httpsAgent: new https.Agent({ keepAlive: false }),
       headers: {
         Authorization: `Bearer ${this.token}`,
         "Content-Type": "application/json",
@@ -21,12 +27,70 @@ export class KommoModel {
     });
   }
 
+  // Método estático para acessar a instância (Singleton por subdomain/token)
+  public static getInstance(subdomain: string, token: string): KommoModel {
+    const key = `${subdomain}:${token}`;
+
+    if (!KommoModel.instances.has(key)) {
+      KommoModel.instances.set(key, new KommoModel(subdomain, token));
+      console.log(`🆕 Nova instacia criada para ${subdomain.toUpperCase()}`);
+    }
+
+    return KommoModel.instances.get(key)!;
+  }
+
+  public static getActiveInstanceCount(): number {
+    return KommoModel.instances.size;
+  }
+
+  public destroy(): void {
+    const key = `${this.subdomain}:${this.token}`;
+
+    // Cancela requisições pendentes
+    const source = axios.CancelToken.source();
+    source.cancel("Cleanup initiated");
+
+    // Limpa referências
+    this.api = null!;
+    KommoModel.instances.delete(key);
+
+    console.log(`♻️  Instância destruída`);
+  }
+
+  public static startInstanceMonitor(
+    intervalMs: number = 60000
+  ): NodeJS.Timeout {
+    return setInterval(() => {
+      console.log("📊 Estatísticas de Instâncias:");
+      console.log(`• Total ativas: ${KommoModel.instances.size}`);
+      console.log(
+        `• Uso de memória: ${(
+          process.memoryUsage().heapUsed /
+          1024 /
+          1024
+        ).toFixed(2)} MB`
+      );
+
+      KommoModel.instances.forEach((instance, key) => {
+        console.log(`   ➝ ${key} (${instance.api ? "ativo" : "inativo"})`);
+      });
+    }, intervalMs);
+  }
+
+  public static cleanupAll(): void {
+    KommoModel.instances.forEach((instance) => instance.destroy());
+    KommoModel.instances.clear();
+    console.log("🧹 Todas as instâncias foram limpas");
+  }
+
   async buscarLeadPorId(leadId: number): Promise<any | null> {
+    const source = axios.CancelToken.source();
+    const timeout = setTimeout(() => source.cancel("Request timed out"), 10000); // 10-second timeout
+
     try {
       const response = await this.api.get(`/leads/${leadId}`, {
-        params: {
-          with: "contacts",
-        },
+        params: { with: "contacts" },
+        cancelToken: source.token,
       });
 
       if (!response.data.id) {
@@ -36,7 +100,9 @@ export class KommoModel {
 
       return response.data;
     } catch (error) {
-      if (error.response?.data?.["validation-errors"]) {
+      if (axios.isCancel(error)) {
+        console.error("❌ Requisição cancelada:", error.message);
+      } else if (error.response?.data?.["validation-errors"]) {
         console.error(
           "❌ Erro ao buscar lead pelo id:",
           error.response.data["validation-errors"][0].errors
@@ -47,9 +113,12 @@ export class KommoModel {
           error.response?.data || error
         );
       }
-      return;
+      return null;
+    } finally {
+      clearTimeout(timeout); // Clear the timeout
     }
   }
+
   async buscarUsuarioPorNome(nome: string): Promise<any | null> {
     try {
       // Obtém todos os usuários

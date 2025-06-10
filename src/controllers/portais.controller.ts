@@ -222,6 +222,8 @@ export class PortaisController {
       );
 
       const contactId = contact._embedded.contacts[0].id;
+      console.log("🔍 Contact ID:", contact._embedded.contacts[0]);
+      console.log("🔍 Contact ID:", contactId);
 
       // -------------------- CASO NÃO TENHA OS CAMPOS PADRÕES --------------------
       if (!origemField || !midiaFiled || !veiculoField) {
@@ -254,6 +256,11 @@ export class PortaisController {
                         },
                       ],
                     },
+                  },
+                ],
+                contacts: [
+                  {
+                    id: contactId,
                   },
                 ],
               },
@@ -376,6 +383,11 @@ export class PortaisController {
                         ],
                       },
                     ],
+                  },
+                ],
+                contacts: [
+                  {
+                    id: contactId,
                   },
                 ],
               },

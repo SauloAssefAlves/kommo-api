@@ -54,6 +54,7 @@ export const getClientesTintim = async () => {
       token: descriptografarToken(cliente.token),
       contador: cliente.contador,
       cliente_nome: cliente.cliente_nome,
+      empresa_id: cliente.empresa_id,
     };
   });
 };

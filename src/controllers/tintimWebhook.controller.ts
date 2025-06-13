@@ -68,7 +68,6 @@ export class TintimWebhookController {
   ) {
     const webhookData = req.body;
     const contador = cliente.contador;
-    console.log("AQUAIUQIUQ",contador)
     const midia = contador % 2 === 0 ? "Facebook ADS" : "Instagram ADS";
     console.log("✅ Webhook recebido");
 
@@ -109,7 +108,7 @@ export class TintimWebhookController {
           nome_lead: webhookData?.name ?? "N/A",
           integrado: false,
           telefone: telefone,
-          empresa_id: cliente.id,
+          empresa_id: cliente.empresa_id,
           causa: "Lead não encontrado pelo telefone",
           source: webhookData.source,
           midia: midia,
@@ -197,7 +196,7 @@ export class TintimWebhookController {
         nome_lead: lead.name,
         integrado: true,
         telefone: telefone,
-        empresa_id: cliente.id,
+        empresa_id: cliente.empresa_id,
         source: webhookData.source,
         midia: midia,
       };
@@ -215,7 +214,7 @@ export class TintimWebhookController {
         nome_lead: webhookData?.name,
         integrado: false,
         telefone: webhookData?.phone,
-        empresa_id: cliente.id,
+        empresa_id: cliente.empresa_id,
         causa: "Erro do servidor",
         source: webhookData.source,
         midia: midia,

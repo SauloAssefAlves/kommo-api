@@ -354,32 +354,30 @@ const ClienteController = {
   async listarMonitoramentoTintim(req, res) {
     const { id } = req.params;
     let query = `
-      SELECT 
-      mo.nome_campanha, 
-      mo.nome_conjunto,
-      mo.nome_anuncio, 
-      mo.telefone, 
-      mo.id_lead, 
-      mo.nome_lead, 
-      mo.integrado, 
-      mo.causa, 
-      mo.data_criacao,
-      mo.midia,
-      mo.source,
-      c.nome as nome_empresa
-      FROM 
-      monitoramento_tintim mo
-      INNER JOIN 
-      tintim_unidades tu ON mo.empresa_id = tu.empresa_id
-      INNER JOIN 
-      clientes c ON mo.empresa_id = c.id
+SELECT 
+    mo.nome_campanha, 
+    mo.nome_conjunto,
+    mo.nome_anuncio, 
+    mo.telefone, 
+    mo.id_lead, 
+    mo.nome_lead, 
+    mo.integrado, 
+    mo.causa, 
+    mo.data_criacao,
+    mo.midia,
+    mo.source,
+    c.nome as nome_empresa
+FROM 
+    monitoramento_tintim mo
+INNER JOIN 
+    tintim_unidades tu ON mo.empresa_id = tu.empresa_id
+INNER JOIN 
+    clientes c ON mo.empresa_id = c.id
+ORDER BY 
+    mo.data_criacao DESC;
     `;
 
     const params = [];
-    if (id) {
-      query += ` WHERE mo.empresa_id = $1`;
-      params.push(id);
-    }
 
     try {
       const monitoradosTintim = await db(query, params);

@@ -79,3 +79,64 @@ export async function incrementarContadorUnidade(unidade_id: number) {
     unidade_id,
   ]);
 }
+
+type MonitoramentoTintim = {
+  nome_campanha: string;
+  nome_conjunto: string;
+  nome_anuncio: string;
+  id_lead?: number;
+  nome_lead: string;
+  integrado: boolean;
+  causa?: string;
+  empresa_id: number;
+  telefone: string;
+  source: string;
+  midia: string;
+};
+
+export async function addMonitoramentoTintim(data: MonitoramentoTintim) {
+  const {
+    nome_campanha,
+    nome_conjunto,
+    nome_anuncio,
+    id_lead,
+    nome_lead,
+    integrado,
+    causa,
+    empresa_id,
+    telefone,
+    source,
+    midia,
+  } = data;
+
+  await db(
+    `INSERT INTO monitoramento_tintim (
+      nome_campanha,
+      nome_conjunto,
+      nome_anuncio,
+      id_lead,
+      nome_lead,
+      integrado,
+      causa,
+      empresa_id,
+      telefone,
+      source,
+      midia
+    ) VALUES (
+      $1, $2, $3, $4, $5, $6 ,$7, $8, $9, $10, $11
+    );`,
+    [
+      nome_campanha,
+      nome_conjunto,
+      nome_anuncio,
+      id_lead || null,
+      nome_lead,
+      integrado,
+      causa || null,
+      empresa_id,
+      telefone,
+      source,
+      midia,
+    ]
+  );
+}

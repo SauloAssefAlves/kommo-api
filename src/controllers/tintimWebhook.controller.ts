@@ -1,6 +1,10 @@
 import { Request, Response } from "express";
 import { KommoModel } from "../models/kommo.models.js";
-import { incrementarContadorUnidade } from "../config/database.js";
+import {
+  addMonitoramentoTintim,
+  incrementarContadorUnidade,
+} from "../config/database.js";
+
 
 export class TintimWebhookController {
   public clienteModel: KommoModel;
@@ -63,6 +67,9 @@ export class TintimWebhookController {
     cliente: any
   ) {
     const webhookData = req.body;
+    const contador = cliente.contador;
+    console.log("AQUAIUQIUQ",contador)
+    const midia = contador % 2 === 0 ? "Facebook ADS" : "Instagram ADS";
     console.log("✅ Webhook recebido");
 
     // ✅ Responde imediatamente ao Tintim
@@ -72,8 +79,6 @@ export class TintimWebhookController {
 
     // ⚠️ A partir daqui, o processamento é feito de forma assíncrona
     try {
-      const contador = cliente.contador;
-
       if (webhookData.source != "Meta Ads") {
         console.log("❌ Webhook não rastreável");
         this.clienteModel.destroy();
@@ -95,11 +100,26 @@ export class TintimWebhookController {
 
       if (!lead) {
         console.log("⚠️ Lead não encontrado para o webhook recebido.");
+        const dataInfo = {
+          nome_campanha:
+            campaing_name_tratado == "" ? "N/A" : campaing_name_tratado,
+          nome_conjunto: adset_name ?? "N/A",
+          nome_anuncio: ad_name ?? "N/A",
+          id_lead: 0,
+          nome_lead: webhookData?.name ?? "N/A",
+          integrado: false,
+          telefone: telefone,
+          empresa_id: cliente.id,
+          causa: "Lead não encontrado pelo telefone",
+          source: webhookData.source,
+          midia: midia,
+        };
+
+        await addMonitoramentoTintim(dataInfo);
         this.clienteModel.destroy();
         return;
       }
 
-      const midia = contador % 2 === 0 ? "Facebook ADS" : "Instagram ADS";
       await incrementarContadorUnidade(cliente.id);
 
       const camposNames = [
@@ -169,9 +189,39 @@ export class TintimWebhookController {
       ]);
 
       console.log("✅ LEAD ATUALIZADO COM SUCESSO", lead.id, lead.name);
+      const dataInfo = {
+        nome_campanha: campaing_name_tratado,
+        nome_conjunto: adset_name ?? "N/A",
+        nome_anuncio: ad_name ?? "N/A",
+        id_lead: lead.id,
+        nome_lead: lead.name,
+        integrado: true,
+        telefone: telefone,
+        empresa_id: cliente.id,
+        source: webhookData.source,
+        midia: midia,
+      };
+
+      await addMonitoramentoTintim(dataInfo);
+
+      //campaing_name_tratado, adset_name, ad_name, lead.id, lead.name
       this.clienteModel.destroy();
     } catch (error) {
       console.error("❌ Erro ao processar webhook:", error);
+      const dataInfo = {
+        nome_campanha: webhookData.campaing_name,
+        nome_conjunto: webhookData.adset_name ?? "N/A",
+        nome_anuncio: webhookData.ad_name ?? "N/A",
+        nome_lead: webhookData?.name,
+        integrado: false,
+        telefone: webhookData?.phone,
+        empresa_id: cliente.id,
+        causa: "Erro do servidor",
+        source: webhookData.source,
+        midia: midia,
+      };
+
+      await addMonitoramentoTintim(dataInfo);
       this.clienteModel.destroy();
     }
   }

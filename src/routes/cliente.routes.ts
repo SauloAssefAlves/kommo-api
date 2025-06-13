@@ -5,7 +5,7 @@ import { authenticateToken } from "../auth/middleware.js";
 const router = Router();
 
 
-// ----------- Listagens -----------
+// ----------- LISTAGENS -----------
 router.get("/listar", authenticateToken, ClienteController.listarClientes);
 router.get(
   "/listarPeloNome/:nome",
@@ -44,6 +44,13 @@ router.get(
   "/listarPortais",
   authenticateToken,
   ClienteController.listarPortais
+);
+
+
+router.get(
+  "/listarMonitoamentoTintim/:id?",
+  authenticateToken,
+  ClienteController.listarMonitoramentoTintim
 );
 // ----------- CADASTROS -----------
 router.post(

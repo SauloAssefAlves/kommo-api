@@ -34,7 +34,6 @@ const ClienteController = {
     }
   },
 
-
   async editarCliente(req, res) {
     try {
       const { nome, token, automotivo } = req.body;
@@ -456,7 +455,19 @@ ORDER BY
 
       res.status(201).json({ data });
     } catch (error) {
-      console.error(error);
+      if (axios.isCancel(error)) {
+        console.error("❌ Requisição cancelada:", error.message);
+      } else if (error.response?.data?.["validation-errors"]) {
+        console.error(
+          "❌ Erro ao buscar lead pelo id:",
+          error.response.data["validation-errors"][0].errors
+        );
+      } else {
+        console.error(
+          "❌ Erro ao buscar lead pelo id:",
+          error.response?.data || error
+        );
+      }
       res.status(500).json({ error: "Erro ao listar clientes portais." });
     }
   },

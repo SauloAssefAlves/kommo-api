@@ -41,6 +41,7 @@ export async function atualizarRotasPortais() {
             message: "Erro ao processar o webhook do portal",
           });
         } finally {
+          clienteModel.destroy();
           console.log("🛑 Finalizando processamento do webhook.");
         }
       }

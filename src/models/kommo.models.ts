@@ -262,6 +262,31 @@ export class KommoModel {
       return []; // Retorna um array vazio em caso de erro
     }
   }
+
+  async listarGrupos(): Promise<any | null> {
+    try {
+      const response = await this.api.get("leads/custom_fields/groups");
+      if (!response.data._embedded?.custom_field_groups) {
+        console.log("❌ Nenhum grupo encontrado");
+        return null;
+      }
+      return response.data._embedded.custom_field_groups;
+    } catch (error) {
+      if (error.response?.data?.["validation-errors"]) {
+        console.error(
+          "❌ Erro ao listar grupos:",
+          error.response.data["validation-errors"][0].errors
+        );
+      } else {
+        console.error(
+          "❌ Erro ao listar grupos:",
+          error.response?.data || error
+        );
+      }
+      return null;
+    }
+  }
+
   async adicionarTask({
     text,
     leadId,
@@ -394,6 +419,47 @@ export class KommoModel {
       } else {
         console.error(
           "❌ Erro ao cadastrar contato:",
+          error.response?.data || error
+        );
+      }
+      return null;
+    }
+  }
+  async cadastrarPipeline(body): Promise<any | null> {
+    try {
+      const response = await this.api.post("/leads/pipelines", body);
+      return response.data;
+    } catch (error) {
+      if (error.response?.data?.["validation-errors"]) {
+        console.error(
+          "❌ Erro ao cadastrar pipeline:",
+          error.response.data["validation-errors"][0].errors
+        );
+      } else {
+        console.error(
+          "❌ Erro ao cadastrar pipeline:",
+          error.response?.data || error
+        );
+      }
+      return null;
+    }
+  }
+  async cadastrarStatus(body, idPipeline): Promise<any | null> {
+    try {
+      const response = await this.api.post(
+        `leads/pipelines/${idPipeline}/statuses`,
+        body
+      );
+      return response.data;
+    } catch (error) {
+      if (error.response?.data?.["validation-errors"]) {
+        console.error(
+          "❌ Erro ao cadastrar status:",
+          error.response.data["validation-errors"][0].errors
+        );
+      } else {
+        console.error(
+          "❌ Erro ao cadastrar status:",
           error.response?.data || error
         );
       }

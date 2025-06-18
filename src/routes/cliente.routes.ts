@@ -1,9 +1,10 @@
 import { Router, Request, Response } from "express";
 import ClienteController from "../controllers/cliente.controler.js";
+import { KommoController } from "../controllers/kommo.controller.js";
 import { authenticateToken } from "../auth/middleware.js";
 
 const router = Router();
-
+const kommoController = new KommoController();
 
 // ----------- LISTAGENS -----------
 router.get("/listar", authenticateToken, ClienteController.listarClientes);
@@ -46,12 +47,13 @@ router.get(
   ClienteController.listarPortais
 );
 
-
 router.get(
   "/listarMonitoamentoTintim/:id?",
   authenticateToken,
   ClienteController.listarMonitoramentoTintim
 );
+
+
 // ----------- CADASTROS -----------
 router.post(
   "/cadastrar",

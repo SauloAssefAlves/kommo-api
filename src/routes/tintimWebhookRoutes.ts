@@ -5,18 +5,25 @@ import { TintimWebhookController } from "../controllers/tintimWebhook.controller
 import { getClientesTintim } from "../config/database.js";
 
 const router = Router();
+// Adicione no topo do arquivo
+const activeControllers = new Map<string, TintimWebhookController>();
+
 export async function atualizarRotasTintim() {
   const clientes = await getClientesTintim();
-
-  // Remove duplicates (if any)
-  const uniqueClientes = Array.from(
-    new Map(clientes.map((c) => [c.nome, c])).values()
-  );
 
   // Limpa todas as rotas existentes no router
   router.stack = [];
 
-  const activeControllers = new WeakMap();
+  // Destroi controladores antigos
+  activeControllers.forEach((controller) => {
+    if (typeof controller.destroy === "function") controller.destroy();
+  });
+  activeControllers.clear();
+
+  // Remove duplicados
+  const uniqueClientes = Array.from(
+    new Map(clientes.map((c) => [c.nome, c])).values()
+  );
 
   uniqueClientes.forEach((cliente) => {
     console.log("🔍", `/tintimWebhook/${cliente.nome}`);
@@ -26,12 +33,12 @@ export async function atualizarRotasTintim() {
         cliente.nome,
         cliente.token
       );
-      activeControllers.set(controller, true);
+      activeControllers.set(cliente.nome, controller);
 
       try {
         await controller.atualizarFiledsWebhookTintim(req, res, cliente);
       } finally {
-        activeControllers.delete(controller);
+        activeControllers.delete(cliente.nome);
       }
     });
   });

@@ -13,6 +13,14 @@ export class TintimWebhookController {
     this.clienteModel = KommoModel.getInstance(subdomain, token);
   }
 
+  destroy(): void {
+    // Libera recursos associados ao KommoModel desta instância
+    if (this.clienteModel) {
+      this.clienteModel.destroy();
+      this.clienteModel = null as any;
+    }
+  }
+
   private async buscarLeadComTentativas(telefone: string): Promise<any> {
     const delays = [5000, 10000, 15000, 20000]; // 5s, 10s, 20s
     let lead: any = null;

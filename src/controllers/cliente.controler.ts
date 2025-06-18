@@ -34,6 +34,7 @@ const ClienteController = {
     }
   },
 
+
   async editarCliente(req, res) {
     try {
       const { nome, token, automotivo } = req.body;
@@ -191,7 +192,7 @@ const ClienteController = {
       res.status(201).json({ data });
     } catch (error) {
       console.error(error);
-      res.status(500).json({ error: "Erro ao listar clientes." });
+      res.status(500).json({ error: "Erro ao buscar pipelines" });
     }
   },
 

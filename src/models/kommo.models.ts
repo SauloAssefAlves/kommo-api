@@ -164,11 +164,7 @@ export class KommoModel {
         },
       });
 
-      if (
-        !response ||
-        !response.data ||
-        !response.data._embedded?.contacts?.length
-      ) {
+      if (!response) {
         console.log("❌ Contato não encontrado");
         return null;
       } else {

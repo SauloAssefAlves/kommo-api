@@ -20,8 +20,8 @@ export async function atualizarRotasPortais() {
     router.post(
       `/${cliente.nome}`,
       async (req: Request, res: Response): Promise<any> => {
-        const clienteModel = new KommoModel(
-          cliente.cliente_nome,
+        const clienteModel = KommoModel.getInstance(
+          cliente.nome,
           cliente.token
         );
         try {

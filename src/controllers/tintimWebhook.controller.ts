@@ -32,6 +32,10 @@ export class TintimWebhookController {
       });
 
     for (let i = 0; i < delays.length; i++) {
+      if (!this.clienteModel) {
+        console.error("❌ clienteModel está nulo ao buscar lead por telefone.");
+        return null;
+      }
       lead = await this.clienteModel.buscarLeadPorTelefone(formattedPhone);
 
       if (lead) {

@@ -11,30 +11,30 @@ export interface Cliente {
 }
 
 export class KommoModel {
-  public api: AxiosInstance;
   private static instances: Map<string, KommoModel> = new Map();
 
-  constructor(private subdomain: string, private token: string) {
-    this.api = axios.create({
-      baseURL: `https://${this.subdomain}.kommo.com/api/v4`,
-      timeout: 10000,
-      httpAgent: new http.Agent({ keepAlive: false }),
-      httpsAgent: new https.Agent({ keepAlive: false }),
-      headers: {
-        Authorization: `Bearer ${this.token}`,
-        "Content-Type": "application/json",
-      },
-    });
-  }
+  private constructor(private subdomain: string, private token: string) {}
+
+  public api!: AxiosInstance;
 
   // Método estático para acessar a instância (Singleton por subdomain/token)
   public static getInstance(subdomain: string, token: string): KommoModel {
     const key = `${subdomain}:${token}`;
 
-    if (!KommoModel.instances.has(key)) {
-      KommoModel.instances.set(key, new KommoModel(subdomain, token));
+      const instance = new KommoModel(subdomain, token);
+      instance.api = axios.create({
+        baseURL: `https://${subdomain}.kommo.com/api/v4`,
+        timeout: 10000,
+        httpAgent: new http.Agent({ keepAlive: false }),
+        httpsAgent: new https.Agent({ keepAlive: false }),
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+      KommoModel.instances.set(key, instance);
       console.log(`🆕 Nova instacia criada para ${subdomain.toUpperCase()}`);
-    }
+    
 
     return KommoModel.instances.get(key)!;
   }
@@ -163,8 +163,7 @@ export class KommoModel {
           with: "leads",
         },
       });
-
-      if (!response) {
+      if (!response.data ){
         console.log("❌ Contato não encontrado");
         return null;
       } else {

@@ -1,6 +1,19 @@
 import { Router, Request, Response } from "express";
-import { KommoController } from "../controllers/kommo.controller.js";
-import { KommoModel } from "../models/kommo.models.js";
+const processingQueue: Promise<void> = Promise.resolve();
+
+function enqueueProcessing<T>(fn: () => Promise<T>): Promise<T> {
+  // Encadeia a função ao final da fila
+  let result: Promise<T>;
+  const last = (processingQueue as any).last || processingQueue;
+  (processingQueue as any).last = last.then(() => {
+    result = fn();
+    return result.catch(() => {}); // Garante que a fila continue mesmo em caso de erro
+  });
+  if ((processingQueue as any).last !== last) {
+    console.log("⏳ Webhook aguardando na fila...");
+  }
+  return (processingQueue as any).last.then(() => result);
+}
 import { TintimWebhookController } from "../controllers/tintimWebhook.controller.js";
 import { getClientesTintim } from "../config/database.js";
 
@@ -29,15 +42,18 @@ export async function atualizarRotasTintim() {
     console.log("🔍", `/tintimWebhook/${cliente.nome}`);
 
     router.post(`/${cliente.nome}`, async (req, res) => {
-      const controller = new TintimWebhookController(
-        cliente.nome,
-        cliente.token
-      );
-      activeControllers.set(cliente.nome, controller);
+      let controller: TintimWebhookController | undefined;
 
       try {
-        await controller.atualizarFiledsWebhookTintim(req, res, cliente);
+        await enqueueProcessing(() => {
+          controller = new TintimWebhookController(cliente.nome, cliente.token);
+          activeControllers.set(cliente.nome, controller);
+          return controller.atualizarFiledsWebhookTintim(req, res, cliente);
+        });
       } finally {
+        if (controller) {
+          controller.destroy();
+        }
         activeControllers.delete(cliente.nome);
       }
     });

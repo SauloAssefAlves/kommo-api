@@ -21,20 +21,19 @@ export class KommoModel {
   public static getInstance(subdomain: string, token: string): KommoModel {
     const key = `${subdomain}:${token}`;
 
-      const instance = new KommoModel(subdomain, token);
-      instance.api = axios.create({
-        baseURL: `https://${subdomain}.kommo.com/api/v4`,
-        timeout: 10000,
-        httpAgent: new http.Agent({ keepAlive: false }),
-        httpsAgent: new https.Agent({ keepAlive: false }),
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
-      KommoModel.instances.set(key, instance);
-      console.log(`🆕 Nova instacia criada para ${subdomain.toUpperCase()}`);
-    
+    const instance = new KommoModel(subdomain, token);
+    instance.api = axios.create({
+      baseURL: `https://${subdomain}.kommo.com/api/v4`,
+      timeout: 10000,
+      httpAgent: new http.Agent({ keepAlive: false }),
+      httpsAgent: new https.Agent({ keepAlive: false }),
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+    });
+    KommoModel.instances.set(key, instance);
+    console.log(`🆕 Nova instacia criada para ${subdomain.toUpperCase()}`);
 
     return KommoModel.instances.get(key)!;
   }
@@ -163,7 +162,7 @@ export class KommoModel {
           with: "leads",
         },
       });
-      if (!response.data ){
+      if (!response.data || !response.data._embedded?.contacts || !response) {
         console.log("❌ Contato não encontrado");
         return null;
       } else {

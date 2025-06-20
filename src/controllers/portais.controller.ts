@@ -2,7 +2,10 @@ import { KommoModel } from "../models/kommo.models.js";
 import { Response, Request } from "express";
 import openai from "../config/openai.js";
 export class PortaisController {
-  constructor(private clienteModel: KommoModel) {}
+  private clienteModel: KommoModel;
+  constructor(clienteModel: KommoModel) {
+    this.clienteModel = clienteModel;
+  }
   private tratarTelefone(telefone: string): string {
     let numero = telefone;
 

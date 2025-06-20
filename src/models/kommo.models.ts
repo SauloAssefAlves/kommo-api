@@ -13,7 +13,7 @@ export interface Cliente {
 export class KommoModel {
   private static instances: Map<string, KommoModel> = new Map();
 
-  private constructor(private subdomain: string, private token: string) {}
+  public constructor(private subdomain: string, private token: string) {}
 
   public api!: AxiosInstance;
 

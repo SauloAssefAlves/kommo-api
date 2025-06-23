@@ -128,6 +128,10 @@ export class PortaisController {
       }
     }
     const { nome, telefone, carro, valor, email } = extractedData;
+    if (telefone === undefined || telefone === null || telefone === "") {
+      console.warn("⚠️Telefone não encontrado no HTML.");
+      return;
+    }
 
     const telefoneTratado = this.tratarTelefone(telefone);
 

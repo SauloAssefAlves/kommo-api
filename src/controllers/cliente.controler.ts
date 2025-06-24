@@ -337,7 +337,7 @@ const ClienteController = {
   async listarUnidadesTintim(req, res) {
     try {
       const clientes = await db(
-        "select tu.id, cl.nome as cliente, tu.nome as unidade , todas_unidades, unidade_formatada from tintim_unidades tu inner join clientes cl on tu.empresa_id  = cl.id "
+        "select tu.id, cl.nome as cliente, tu.nome as unidade , todas_unidades, unidade_formatada, tu.data_ultimo_tintim from tintim_unidades tu inner join clientes cl on tu.empresa_id  = cl.id"
       );
 
       const data = clientes.map((cliente) => {
@@ -392,6 +392,7 @@ ORDER BY
       res.status(500).json({ error: "Erro ao listar clientes tintim." });
     }
   },
+
   async listarPortais(req, res) {
     try {
       const clientes = await db(

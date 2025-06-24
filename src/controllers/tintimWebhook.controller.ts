@@ -2,9 +2,9 @@ import { Request, Response } from "express";
 import { KommoModel } from "../models/kommo.models.js";
 import {
   addMonitoramentoTintim,
+  adicionarDataTintim,
   incrementarContadorUnidade,
 } from "../config/database.js";
-
 
 export class TintimWebhookController {
   public clienteModel: KommoModel;
@@ -212,6 +212,8 @@ export class TintimWebhookController {
         source: webhookData.source,
         midia: midia,
       };
+      const dataAtual = new Date();
+      await adicionarDataTintim(dataAtual, cliente.empresa_id);
 
       await addMonitoramentoTintim(dataInfo);
 

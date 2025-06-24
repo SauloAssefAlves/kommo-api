@@ -75,6 +75,17 @@ export const getClientesPortais = async () => {
   });
 };
 
+export const adicionarDataTintim = async (data, id) => {
+  const response = await db(
+    `  UPDATE tintim_unidades
+            SET data_ultimo_tintim = $1
+            WHERE empresa_id = $2
+            RETURNING *; -- Retorna a linha atualizada (opcional)`,
+    [data, id]
+  );
+  return response;
+};
+
 export async function incrementarContadorUnidade(unidade_id: number) {
   await db("UPDATE tintim_unidades SET contador = contador + 1 WHERE id = $1", [
     unidade_id,

@@ -396,7 +396,7 @@ ORDER BY
   async listarPortais(req, res) {
     try {
       const clientes = await db(
-        " select cp.id, c.id as id_cliente , cp.nome , cp.pipeline, cp.status_pipeline , c.token from clientes_portais cp inner join clientes c on c.id = cp.empresa_id "
+        " select cp.id, c.id as id_cliente , cp.nome , cp.pipeline, cp.status_pipeline ,cp.data_ultimo_lead , c.token from clientes_portais cp inner join clientes c on c.id = cp.empresa_id "
       );
 
       const result = clientes.map((cliente) => {
@@ -407,6 +407,7 @@ ORDER BY
           token: descriptografarToken(cliente.token),
           pipeline_id: cliente.pipeline,
           status_id: cliente.status_pipeline,
+          data_ultimo_lead: cliente.data_ultimo_lead,
         };
       });
 

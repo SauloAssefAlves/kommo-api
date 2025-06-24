@@ -61,7 +61,7 @@ export const getClientesTintim = async () => {
 
 export const getClientesPortais = async () => {
   const response = await db(
-    `select c.nome , cp.nome as unidade_nome, cp.pipeline, cp.status_pipeline , c.token, cp.type from clientes_portais cp inner join clientes c on c.id = cp.empresa_id`
+    `select c.id, c.nome , cp.nome as unidade_nome, cp.pipeline, cp.status_pipeline , c.token, cp.type from clientes_portais cp inner join clientes c on c.id = cp.empresa_id`
   );
   return response.map((cliente) => {
     return {
@@ -71,6 +71,7 @@ export const getClientesPortais = async () => {
       cliente_nome: cliente.unidade_nome,
       status_id: cliente.status_pipeline,
       type: cliente.type,
+      empresa_id: cliente.id,
     };
   });
 };
@@ -79,6 +80,17 @@ export const adicionarDataTintim = async (data, id) => {
   const response = await db(
     `  UPDATE tintim_unidades
             SET data_ultimo_tintim = $1
+            WHERE empresa_id = $2
+            RETURNING *; -- Retorna a linha atualizada (opcional)`,
+    [data, id]
+  );
+  return response;
+};
+
+export const adicionarDataPortais = async (data, id) => {
+  const response = await db(
+    `  UPDATE clientes_portais
+            SET data_ultimo_lead = $1
             WHERE empresa_id = $2
             RETURNING *; -- Retorna a linha atualizada (opcional)`,
     [data, id]

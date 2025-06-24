@@ -1,6 +1,7 @@
 import { KommoModel } from "../models/kommo.models.js";
 import { Response, Request } from "express";
 import openai from "../config/openai.js";
+import { adicionarDataPortais } from "../config/database.js";
 export class PortaisController {
   private clienteModel: KommoModel;
   constructor(clienteModel: KommoModel) {
@@ -278,6 +279,7 @@ export class PortaisController {
             JSON.stringify(bodyLead)
           );
           leadId = lead._embedded.leads[0].id;
+          await adicionarDataPortais(new Date(), cliente.empresa_id);
           console.log("🚀 Incoming Lead criado com sucesso:", lead);
         } else {
           const bodyLeadSemCamposPadroes = [

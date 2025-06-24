@@ -279,7 +279,7 @@ export class PortaisController {
             JSON.stringify(bodyLead)
           );
           leadId = lead._embedded.leads[0].id;
-          await adicionarDataPortais(new Date(), cliente.empresa_id);
+          
           console.log("🚀 Incoming Lead criado com sucesso:", lead);
         } else {
           const bodyLeadSemCamposPadroes = [
@@ -300,6 +300,7 @@ export class PortaisController {
           const lead = await this.clienteModel.cadastrarLead(
             JSON.stringify(bodyLeadSemCamposPadroes)
           );
+
 
           leadId = lead._embedded.leads[0].id;
         }
@@ -324,7 +325,8 @@ export class PortaisController {
           text: noteTextLead,
           typeNote: "common",
         });
-
+        await adicionarDataPortais(new Date(), cliente.empresa_id);
+        
         console.log("Novo lead criado");
 
         // -------------------- CASO TENHA OS CAMPOS PADRÕES --------------------
@@ -480,6 +482,7 @@ export class PortaisController {
           text: noteTextLead,
           typeNote: "common",
         });
+        await adicionarDataPortais(new Date(), cliente.empresa_id);
 
         console.log("👍 Novo lead criado");
       }

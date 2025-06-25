@@ -104,6 +104,60 @@ export async function incrementarContadorUnidade(unidade_id: number) {
   ]);
 }
 
+type MonitoramentoPortais = {
+  empresa_id: number;
+  nome_lead: string;
+  telefone: string;
+  veiculo: string;
+  origem: string;
+  midia: string;
+  valor: number;
+  integrado: boolean;
+  causa?: string;
+};
+
+export async function addMonitoramentoPortais(data: MonitoramentoPortais) {
+  const {
+    empresa_id,
+    nome_lead,
+    telefone,
+    veiculo,
+    origem,
+    midia,
+    valor,
+    integrado,
+    causa,
+  } = data;
+
+  await db(
+    `INSERT INTO monitoramento_portais (
+      empresa_id,
+      nome_lead,
+      telefone,
+      veiculo,
+      origem,
+      midia,
+      valor,
+      integrado,
+      causa
+    ) VALUES (
+      $1, $2, $3, $4, $5, $6, $7, $8, $9
+    );`,
+    [
+      empresa_id,
+      nome_lead,
+      telefone,
+      veiculo,
+      origem,
+      midia,
+      valor || 0.0,
+      integrado,
+      causa || "N/A",
+    ]
+  );
+  console.log("Monitoramento Portais adicionado com sucesso:");
+}
+
 type MonitoramentoTintim = {
   nome_campanha: string;
   nome_conjunto: string;
@@ -117,7 +171,6 @@ type MonitoramentoTintim = {
   source: string;
   midia: string;
 };
-
 export async function addMonitoramentoTintim(data: MonitoramentoTintim) {
   const {
     nome_campanha,

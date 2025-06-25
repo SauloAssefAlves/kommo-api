@@ -1,7 +1,10 @@
 import { KommoModel } from "../models/kommo.models.js";
 import { Response, Request } from "express";
 import openai from "../config/openai.js";
-import { adicionarDataPortais } from "../config/database.js";
+import {
+  addMonitoramentoPortais,
+  adicionarDataPortais,
+} from "../config/database.js";
 export class PortaisController {
   private clienteModel: KommoModel;
   constructor(clienteModel: KommoModel) {
@@ -279,7 +282,7 @@ export class PortaisController {
             JSON.stringify(bodyLead)
           );
           leadId = lead._embedded.leads[0].id;
-          
+
           console.log("🚀 Incoming Lead criado com sucesso:", lead);
         } else {
           const bodyLeadSemCamposPadroes = [
@@ -300,8 +303,6 @@ export class PortaisController {
           const lead = await this.clienteModel.cadastrarLead(
             JSON.stringify(bodyLeadSemCamposPadroes)
           );
-
-
           leadId = lead._embedded.leads[0].id;
         }
         const noteTextLead = `ℹ Novo Lead (ID ${leadId})
@@ -326,7 +327,18 @@ export class PortaisController {
           typeNote: "common",
         });
         await adicionarDataPortais(new Date(), cliente.empresa_id);
-        
+        await addMonitoramentoPortais({
+          empresa_id: cliente.empresa_id,
+          nome_lead: nome,
+          telefone: telefoneTratado,
+          veiculo: carro,
+          origem: origem,
+          midia: "Portais",
+          valor: valor,
+          integrado: true,
+        });
+
+
         console.log("Novo lead criado");
 
         // -------------------- CASO TENHA OS CAMPOS PADRÕES --------------------
@@ -404,11 +416,25 @@ export class PortaisController {
               },
             },
           ];
+          const noteTextLead = `ℹ Novo Lead (ID ${leadId})
+
+          ----
+          Dados do formulário preenchido:
+  
+          Veículo: ${carro}
+          Nome: ${nome}
+          Telefone: ${telefone}
+          Mensagem: Veja abaixo informações de um cliente que acessou o número de contato ou WhatsApp da sua loja.
+  
+          ----
+  
+          Mídia: Portais
+          Origem: ${origem}
+          Anúncio: ${carro} - R$ ${valor}`;
 
           const lead = await this.clienteModel.cadastrarLeadIncomingLeads(
             JSON.stringify(bodyLead)
           );
-
           console.log("🚀 Incoming Lead criado com sucesso:", lead);
           leadId = lead._embedded.leads[0].id;
         } else {
@@ -483,6 +509,16 @@ export class PortaisController {
           typeNote: "common",
         });
         await adicionarDataPortais(new Date(), cliente.empresa_id);
+        await addMonitoramentoPortais({
+          empresa_id: cliente.empresa_id,
+          nome_lead: nome,
+          telefone: telefoneTratado,
+          veiculo: carro,
+          origem: origem,
+          midia: "Portais",
+          valor: valor,
+          integrado: true,
+        });
 
         console.log("👍 Novo lead criado");
       }

@@ -22,7 +22,7 @@ export class TintimWebhookController {
   }
 
   private async buscarLeadComTentativas(telefone: string): Promise<any> {
-    const delays = [5000, 10000, 15000, 20000]; // 5s, 10s, 20s
+    const delays = [2000, 5000, 7000];
     let lead: any = null;
     let formattedPhone = telefone
 

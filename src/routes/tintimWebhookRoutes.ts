@@ -1,20 +1,20 @@
 import { Router } from "express";
-const processingQueue: Promise<void> = Promise.resolve();
+let processingQueue: Promise<void> = Promise.resolve();
 
 async function enqueueProcessing<T>(fn: () => Promise<T>): Promise<T> {
   // Encadeia a função ao final da fila
   let result: Promise<T>;
-  const last = (processingQueue as any).last || processingQueue;
-  (processingQueue as any).last = last.then(async () => {
+  const prevQueue = processingQueue;
+  processingQueue = prevQueue.then(async () => {
     result = fn();
     try {
       await result;
     } catch {}
   });
-  if ((processingQueue as any).last !== last) {
+  if (processingQueue !== prevQueue) {
     console.log("⏳ Webhook aguardando na fila...");
   }
-  await (processingQueue as any).last;
+  await processingQueue;
   return result;
 }
 import { TintimWebhookController } from "../controllers/tintimWebhook.controller.js";
@@ -62,6 +62,8 @@ export async function atualizarRotasTintim() {
     });
   });
 }
+
+
 
 // Chamada inicial para configurar as rotas
 atualizarRotasTintim().catch((error) =>

@@ -47,18 +47,18 @@ export async function atualizarRotasTintim() {
     router.post(`/${cliente.nome}`, async (req, res) => {
       let controller: TintimWebhookController | undefined;
 
-      try {
-        await enqueueProcessing(() => {
-          controller = new TintimWebhookController(cliente.nome, cliente.token);
-          activeControllers.set(cliente.nome, controller);
-          return controller.atualizarFiledsWebhookTintim(req, res, cliente);
-        });
-      } finally {
-        if (controller) {
-          controller.destroy();
+      await enqueueProcessing(async () => {
+        controller = new TintimWebhookController(cliente.nome, cliente.token);
+        activeControllers.set(cliente.nome, controller);
+        try {
+          return await controller.atualizarFiledsWebhookTintim(req, res, cliente);
+        } finally {
+          if (controller) {
+            controller.destroy();
+          }
+          activeControllers.delete(cliente.nome);
         }
-        activeControllers.delete(cliente.nome);
-      }
+      });
     });
   });
 }

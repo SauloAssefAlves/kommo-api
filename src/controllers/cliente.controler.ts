@@ -393,6 +393,31 @@ ORDER BY
     }
   },
 
+  async listarMonitoramentoPortais(req, res) {
+    const { id } = req.params;
+    let query = `
+select c.nome , mp.nome_lead, mp.telefone, mp.veiculo, mp.origem, mp.midia, mp.valor, mp.data_criada, mp.integrado, mp.causa 
+from monitoramento_portais mp inner join clientes c on c.id = mp.empresa_id ORDER BY 
+    mp.data_criada DESC;
+
+    `;
+
+    const params = [];
+
+    try {
+      const monitoradosPortais = await db(query, params);
+
+      const data = monitoradosPortais.map((portais) => {
+        return { ...portais };
+      });
+
+      res.status(201).json({ data });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ error: "Erro ao listar clientes tintim." });
+    }
+  },
+
   async listarPortais(req, res) {
     try {
       const clientes = await db(

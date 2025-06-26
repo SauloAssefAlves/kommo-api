@@ -90,17 +90,15 @@ export class TintimWebhookController {
 
     // ⚠️ A partir daqui, o processamento é feito de forma assíncrona
     try {
-      if (webhookData.source != "Meta Ads") {
+      if (webhookData.source !== "Meta Ads") {
         console.log("❌ Webhook não rastreável");
-        this.clienteModel.destroy();
-        return;
+        return res.status(200).json({ message: "❌ Webhook não rastreável" });
       }
 
       const evoUser = await this.clienteModel.buscarUsuarioPorNome(
         "EVO Result"
       );
       const telefone = webhookData?.phone;
-      const source = webhookData?.source;
       const { campaign_name, adset_name, ad_name } = webhookData?.ad || {};
 
       const campaing_name_tratado = campaign_name

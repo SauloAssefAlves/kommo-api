@@ -53,6 +53,12 @@ router.get(
   ClienteController.listarMonitoramentoTintim
 );
 
+router.get(
+  "/listarMonitoamentoPortais/:id?",
+  authenticateToken,
+  ClienteController.listarMonitoramentoPortais
+);
+
 
 // ----------- CADASTROS -----------
 router.post(

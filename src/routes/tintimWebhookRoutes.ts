@@ -1,18 +1,21 @@
-import { Router, Request, Response } from "express";
+import { Router } from "express";
 const processingQueue: Promise<void> = Promise.resolve();
 
-function enqueueProcessing<T>(fn: () => Promise<T>): Promise<T> {
+async function enqueueProcessing<T>(fn: () => Promise<T>): Promise<T> {
   // Encadeia a função ao final da fila
   let result: Promise<T>;
   const last = (processingQueue as any).last || processingQueue;
-  (processingQueue as any).last = last.then(() => {
+  (processingQueue as any).last = last.then(async () => {
     result = fn();
-    return result.catch(() => {}); // Garante que a fila continue mesmo em caso de erro
+    try {
+      await result;
+    } catch {}
   });
   if ((processingQueue as any).last !== last) {
     console.log("⏳ Webhook aguardando na fila...");
   }
-  return (processingQueue as any).last.then(() => result);
+  await (processingQueue as any).last;
+  return result;
 }
 import { TintimWebhookController } from "../controllers/tintimWebhook.controller.js";
 import { getClientesTintim } from "../config/database.js";

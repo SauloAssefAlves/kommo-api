@@ -48,8 +48,9 @@ export async function atualizarRotasTintim() {
       let controller: TintimWebhookController | undefined;
 
       await enqueueProcessing(async () => {
-        controller = new TintimWebhookController(cliente.nome, cliente.token);
-        activeControllers.set(cliente.nome, controller);
+        controller = new TintimWebhookController(cliente.cliente_nome, cliente.token);
+        activeControllers.set(cliente.cliente_nome, controller);
+
         try {
           return await controller.atualizarFiledsWebhookTintim(req, res, cliente);
         } finally {

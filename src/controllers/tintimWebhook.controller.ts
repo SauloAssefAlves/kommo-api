@@ -125,7 +125,7 @@ export class TintimWebhookController {
         };
 
         await addMonitoramentoTintim(dataInfo);
-        this.clienteModel.destroy();
+
         return;
       }
 
@@ -216,7 +216,6 @@ export class TintimWebhookController {
       await addMonitoramentoTintim(dataInfo);
 
       //campaing_name_tratado, adset_name, ad_name, lead.id, lead.name
-      this.clienteModel.destroy();
     } catch (error) {
       console.error("❌ Erro ao processar webhook:", error);
       const dataInfo = {
@@ -233,7 +232,6 @@ export class TintimWebhookController {
       };
 
       await addMonitoramentoTintim(dataInfo);
-      this.clienteModel.destroy();
     }
   }
 }

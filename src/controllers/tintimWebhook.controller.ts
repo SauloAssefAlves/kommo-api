@@ -92,7 +92,7 @@ export class TintimWebhookController {
     try {
       if (webhookData.source !== "Meta Ads") {
         console.log("❌ Webhook não rastreável");
-        return res.status(200).json({ message: "❌ Webhook não rastreável" });
+        return;
       }
 
       const evoUser = await this.clienteModel.buscarUsuarioPorNome(

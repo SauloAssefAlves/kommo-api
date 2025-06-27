@@ -125,6 +125,18 @@ export class PortaisController {
         attempts++;
         console.error(`Erro ao extrair dados (tentativa ${attempts}):`, error);
         if (attempts >= maxRetries) {
+          await addMonitoramentoPortais({
+            empresa_id: cliente.empresa_id,
+            nome_lead: extractedData.nome,
+            telefone: extractedData.telefoneTratado,
+            veiculo: extractedData.carro,
+            origem: extractedData.origem,
+            midia: "Portais",
+            valor: extractedData.valor,
+            integrado: false,
+            causa:
+              "Falha ao processar os dados extraídos do HTML após várias tentativas.",
+          });
           throw new Error(
             "Falha ao processar os dados extraídos do HTML após várias tentativas."
           );
@@ -133,6 +145,17 @@ export class PortaisController {
     }
     const { nome, telefone, carro, valor, email } = extractedData;
     if (telefone === undefined || telefone === null || telefone === "") {
+      await addMonitoramentoPortais({
+        empresa_id: cliente.empresa_id,
+        nome_lead: nome ?? null,
+        telefone: "",
+        veiculo: carro ?? null,
+        origem: origem ?? null,
+        midia: "Portais",
+        valor: valor ?? null,
+        integrado: false,
+        causa: "Telefone não encontrado no HTML.",
+      });
       console.warn("⚠️Telefone não encontrado no HTML.");
       return;
     }
@@ -159,12 +182,26 @@ export class PortaisController {
       Origem: ${origem}
       Anúncio: ${carro} - R$ ${valor}`;
 
+    // Verifica se o lead já existe
+
     if (leadExistente) {
       const { id } = leadExistente;
       await this.clienteModel.adicionarNota({
         leadId: id,
         text: noteText,
         typeNote: "common",
+      });
+      await adicionarDataPortais(new Date(), cliente.empresa_id);
+      await addMonitoramentoPortais({
+        empresa_id: cliente.empresa_id,
+        nome_lead: nome,
+        telefone: telefoneTratado,
+        veiculo: carro,
+        origem: origem,
+        midia: "Portais",
+        valor: valor,
+        integrado: true,
+        causa: "Lead já existente, nota adicionada.",
       });
       return;
     } else {
@@ -338,7 +375,6 @@ export class PortaisController {
           integrado: true,
         });
 
-
         console.log("Novo lead criado");
 
         // -------------------- CASO TENHA OS CAMPOS PADRÕES --------------------
@@ -416,21 +452,6 @@ export class PortaisController {
               },
             },
           ];
-          const noteTextLead = `ℹ Novo Lead (ID ${leadId})
-
-          ----
-          Dados do formulário preenchido:
-  
-          Veículo: ${carro}
-          Nome: ${nome}
-          Telefone: ${telefone}
-          Mensagem: Veja abaixo informações de um cliente que acessou o número de contato ou WhatsApp da sua loja.
-  
-          ----
-  
-          Mídia: Portais
-          Origem: ${origem}
-          Anúncio: ${carro} - R$ ${valor}`;
 
           const lead = await this.clienteModel.cadastrarLeadIncomingLeads(
             JSON.stringify(bodyLead)

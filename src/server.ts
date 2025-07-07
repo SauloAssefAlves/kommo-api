@@ -1,5 +1,4 @@
 import app from "./app.js";
-import "dotenv/config";
 import { KommoModel } from "./models/kommo.models.js";
 const port = Number(process.env.PORT);
 

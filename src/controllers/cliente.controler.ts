@@ -1,11 +1,9 @@
 import { db, descriptografarToken } from "../config/database.js";
 import CryptoJS from "crypto-js";
-import dotenv from "dotenv";
 import axios from "axios";
 import { atualizarRotasPortais } from "../routes/portaisRoutes.js";
 import { atualizarRotasTintim } from "../routes/tintimWebhookRoutes.js";
 
-dotenv.config();
 
 const ClienteController = {
   async cadastrarCliente(req, res) {

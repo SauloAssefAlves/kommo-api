@@ -1,8 +1,6 @@
 import pkg from "pg";
-import dotenv from "dotenv";
-import CryptoJS from "crypto-js"; // (Você pode remover se não usar neste arquivo)
+import CryptoJS from "crypto-js"; 
 
-dotenv.config();
 
 const { Pool } = pkg;
 

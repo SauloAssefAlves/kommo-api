@@ -13,7 +13,7 @@ export interface Cliente {
 export class KommoModel {
   private static instances: Map<string, KommoModel> = new Map();
 
-  public constructor(private subdomain: string, private token: string) {}
+  public constructor(public subdomain: string, public token: string) {}
 
   public api!: AxiosInstance;
 
@@ -82,6 +82,30 @@ export class KommoModel {
     console.log("🧹 Todas as instâncias foram limpas");
   }
 
+
+  async getContactById(contactId: number): Promise<any | null> {
+    try {
+      const response = await this.api.get(`/contacts/${contactId}`);
+      if (!response.data || !response.data.id) {
+        console.log("❌ Contato não encontrado");
+        return null;
+      }
+      return response.data;
+    } catch (error) {
+      if (error.response?.data?.["validation-errors"]) {
+        console.error(
+          "❌ Erro ao buscar contato por ID:",
+          error.response.data["validation-errors"][0].errors
+        );
+      } else {
+        console.error(
+          "❌ Erro ao buscar contato por ID:",
+          error.response?.data || error
+        );
+      }
+      return null;
+    }
+  }
   async buscarLeadPorId(leadId: number): Promise<any | null> {
     const source = axios.CancelToken.source();
     const timeout = setTimeout(() => source.cancel("Request timed out"), 10000); // 10-second timeout

@@ -1,7 +1,10 @@
-import { Request, Response } from "express";
+import e, { Request, Response } from "express";
 import { KommoModel } from "../models/kommo.models.js";
 import { CustomFileds, funils } from "./jsons/index.js";
 import axios from "axios";
+import { loginSws } from "../sws_utils/loginSws.js";
+import { searchCpf } from "../sws_utils/searchCpf.js";
+import { getTipoAdesaoPorNome } from "../sws_utils/adesaoName.js";
 export class KommoController {
   public clienteModel: KommoModel;
   private status: any;
@@ -272,6 +275,333 @@ export class KommoController {
       this.destroy();
     } catch (error) {
       console.error("Erro ao cadastrar pipelines e status: ", error);
+      throw error;
+    }
+  }
+
+  public async updateCustomFields(
+    params:
+      | {
+          subdomain: string;
+          token: string;
+          lead_id: number;
+          customFieldsToUpdate: { name: string; value?: any }[];
+        }
+      | {
+          clienteModel: KommoModel;
+          lead_id: number;
+          customFieldsToUpdate: { name: string; value?: any }[];
+        }
+  ): Promise<{ success: boolean; mensagem?: any }> {
+    let clienteModel: KommoModel | null = null;
+    try {
+      let customFieldsToUpdate: { name: string; value?: any }[];
+      if ("clienteModel" in params) {
+        clienteModel = params.clienteModel;
+        customFieldsToUpdate = params.customFieldsToUpdate;
+      } else {
+        clienteModel = KommoModel.getInstance(params.subdomain, params.token);
+        customFieldsToUpdate = params.customFieldsToUpdate;
+      }
+
+      const customFieldsResponse = await clienteModel.getCustomfields({
+        entity_type: "leads",
+      });
+      const customFields = customFieldsResponse?._embedded?.custom_fields || [];
+
+      const camposEncontrados = customFields.filter((field: any) =>
+        customFieldsToUpdate.some((cf) => cf.name === field.name)
+      );
+
+      // Verifica se todos os campos foram encontrados
+      const nomesCamposEncontrados = camposEncontrados.map(
+        (field: any) => field.name
+      );
+      const nomesCamposSolicitados = customFieldsToUpdate.map((cf) => cf.name);
+      const camposNaoEncontrados = nomesCamposSolicitados.filter(
+        (nome) => !nomesCamposEncontrados.includes(nome)
+      );
+
+      if (camposNaoEncontrados.length > 0) {
+        return {
+          success: false,
+          mensagem: `Campos não encontrados: ${camposNaoEncontrados.join(
+            ", "
+          )}`,
+        };
+      }
+
+      const camposComIdEValor = camposEncontrados.map((field: any) => {
+        const campo = customFieldsToUpdate.find((cf) => cf.name === field.name);
+        return {
+          field_id: field.id,
+          values: [{ value: campo?.value }],
+        };
+      });
+      console.log("Campos encontrados e formatados para atualização:");
+      console.dir(camposComIdEValor, { depth: null });
+
+      let subdomainKommo: string;
+      let tokenKommo: string;
+      if ("clienteModel" in params) {
+        subdomainKommo = clienteModel.subdomain;
+        tokenKommo = clienteModel.token;
+      } else {
+        subdomainKommo = params.subdomain;
+        tokenKommo = params.token;
+      }
+
+      const response = await axios.patch(
+        `https://${subdomainKommo}.kommo.com/api/v4/leads/${params.lead_id}`,
+
+        JSON.stringify({
+          custom_fields_values: camposComIdEValor,
+        }),
+
+        {
+          headers: {
+            Authorization: `Bearer ${tokenKommo}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      console.dir(response.data);
+
+      return { success: true, mensagem: response.data };
+    } catch (error) {
+      if (axios.isCancel(error)) {
+        console.error("❌ Requisição cancelada:", error.message);
+      } else if (error.response?.data?.["validation-errors"]) {
+        console.error("❌ Requisição cancelada:");
+        return {
+          success: false,
+          mensagem: error.response?.data["validation-errors"][0].errors,
+        };
+      }
+    } finally {
+      if (clienteModel) {
+        clienteModel.destroy();
+      } else {
+        this.destroy();
+      }
+    }
+  }
+
+  public async buscarCpfSws(
+    kommoCliente: { subdomain: string; tokenDescriptografado: string },
+    lead_id: number
+  ): Promise<any> {
+    const { subdomain, tokenDescriptografado } = kommoCliente;
+    this.clienteModel = KommoModel.getInstance(
+      subdomain,
+      tokenDescriptografado
+    );
+    const lead = await this.clienteModel.buscarLeadPorId(lead_id);
+    // Pega o id do contato principal (main)
+    let mainContactId: number | null = null;
+    if (lead && lead._embedded && Array.isArray(lead._embedded.contacts)) {
+      const mainContact = lead._embedded.contacts.find((c: any) => c.is_main);
+      if (mainContact) {
+        mainContactId = mainContact.id;
+        console.log("ID do contato principal:", mainContactId);
+      } else {
+        console.log("Nenhum contato principal encontrado.");
+      }
+    } else {
+      console.log("Lead não possui contatos vinculados.");
+    }
+
+    console.log("ID do lead:", lead_id);
+    console.log("ID do contato principal:", mainContactId);
+    const contato = await this.clienteModel.getContactById(
+      mainContactId as number
+    );
+    // Busca o CPF (vat_id) do contato nos campos customizados
+    let cpf: string | undefined;
+    if (contato && Array.isArray(contato.custom_fields_values)) {
+      const cpfField = contato.custom_fields_values.find(
+      (field: any) => field.field_name === "CPF" && field.field_type === "legal_entity"
+      );
+      if (
+      cpfField &&
+      Array.isArray(cpfField.values) &&
+      cpfField.values[0]?.value?.vat_id
+      ) {
+      cpf = cpfField.values[0].value.vat_id;
+      }
+    }
+    console.log("CPF encontrado:", cpf);
+    function toIso8601(dateStr) {
+      console.log("Convertendo data para timestamp local:", dateStr);
+      if (!dateStr || dateStr === "N/A") return dateStr;
+      // yyyy-mm-dd
+      if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+        const [year, month, day] = dateStr.split("-");
+        // Cria a data na timezone local
+        const date = new Date(
+          Number(year),
+          Number(month) - 1,
+          Number(day),
+          0,
+          0,
+          0,
+          0
+        );
+        return Math.floor(date.getTime() / 1000);
+      }
+      // dd/mm/yyyy
+      if (/^\d{2}\/\d{2}\/\d{4}$/.test(dateStr)) {
+        const [day, month, year] = dateStr.split("/");
+        const date = new Date(
+          Number(year),
+          Number(month) - 1,
+          Number(day),
+          0,
+          0,
+          0,
+          0
+        );
+        return Math.floor(date.getTime() / 1000);
+      }
+      // yyyy-mm-ddTHH:MM:SSZ
+      if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/.test(dateStr)) {
+        const [datePart] = dateStr.split("T");
+        const [year, month, day] = datePart.split("-");
+        const date = new Date(
+          Number(year),
+          Number(month) - 1,
+          Number(day),
+          0,
+          0,
+          0,
+          0
+        );
+        return Math.floor(date.getTime() / 1000);
+      }
+      // Outros formatos
+      let date = new Date(dateStr);
+      if (isNaN(date.getTime())) return dateStr;
+      return Math.floor(date.getTime() / 1000);
+    }
+
+    try {
+      const email = process.env.LOGIN_USERNAME_SWS;
+      const password = process.env.LOGIN_PASSWORD_SWS;
+
+      // Exemplo de uso das variáveis
+      const { subdomain, tokenDescriptografado } = kommoCliente;
+      this.clienteModel = KommoModel.getInstance(
+        subdomain,
+        tokenDescriptografado
+      );
+      console.log("Email do SWS:", email);
+      console.log("Senha do SWS:", password);
+      const token = await loginSws(email, password);
+      const infoCpf = await searchCpf(token, cpf);
+      if (infoCpf.success === false) {
+        console.log("CPF não encontrado ou inválido:", infoCpf.mensagem);
+        const nota = {
+          leadId: lead_id,
+          text: `CPF ${cpf} não encontrado ou inválido: ${infoCpf.mensagem}`,
+        };
+        await this.clienteModel.adicionarNota(nota);
+        this.destroy();
+        return infoCpf;
+      }
+      console.log("CPF encontrado:", infoCpf);
+      // Verifica se os campos necessários estão presentes
+      const camposNecessarios = [
+        { name: "Plano contratado", value: infoCpf.adesao.plano.nome },
+        {
+          name: "Tipo de adesão",
+          value: getTipoAdesaoPorNome(infoCpf.adesao.status.nome),
+        },
+        {
+          name: "Data da contratação",
+          value: toIso8601(infoCpf.adesao.data_inicio),
+        },
+        {
+          name: "Data final do plano",
+          value: toIso8601(infoCpf.adesao.data_final),
+        },
+        {
+          name: "Data final do plano",
+          value: toIso8601(infoCpf.adesao.data_final),
+        },
+      ];
+
+      console.log("Campos necessários:", camposNecessarios);
+      // Função para formatar data no padrão brasileiro (dd/mm/yyyy)
+      function formatDateBr(dateStr: string) {
+        if (!dateStr || dateStr === "N/A") return "N/A";
+        let date: Date;
+        // yyyy-mm-dd
+        if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+          const [year, month, day] = dateStr.split("-");
+          date = new Date(Number(year), Number(month) - 1, Number(day));
+        } else if (/^\d{2}\/\d{2}\/\d{4}$/.test(dateStr)) {
+          return dateStr;
+        } else if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/.test(dateStr)) {
+          date = new Date(dateStr);
+        } else {
+          date = new Date(dateStr);
+        }
+        if (isNaN(date.getTime())) return dateStr;
+        return date.toLocaleDateString("pt-BR");
+      }
+
+      function capitalizeFirstLetter(str: string) {
+        if (!str) return str;
+        return str.charAt(0).toUpperCase() + str.slice(1);
+      }
+
+      const nota = {
+        leadId: lead_id,
+        text:
+          "Consulta de CPF realizada:\n" +
+          "--------------------------------\n" +
+          "Nome: " +
+          capitalizeFirstLetter(infoCpf.nome || infoCpf.adesao.plano.nome || "N/A") +
+          "\n" +
+          "Situação: " +
+          capitalizeFirstLetter(
+        (infoCpf.adesao?.status?.nome && infoCpf.adesao?.status?.nome) ||
+          "N/A"
+          ) +
+          "\n" +
+          "Plano: " +
+          capitalizeFirstLetter(infoCpf.adesao?.plano?.nome || "N/A") +
+          "\n" +
+          "Data de início: " +
+          formatDateBr(infoCpf.adesao?.data_inicio) +
+          "\n" +
+          "Data final: " +
+          formatDateBr(infoCpf.adesao?.data_final) +
+          "\n" +
+          "--------------------------------",
+        typeNote: "common",
+      };
+      await this.clienteModel.adicionarNota(nota);
+      const responseCustomFields = await this.updateCustomFields({
+        clienteModel: this.clienteModel,
+        customFieldsToUpdate: camposNecessarios,
+        lead_id,
+      });
+
+      if (responseCustomFields.success === false) {
+        console.error(
+          "Erro ao atualizar campos personalizados:",
+          responseCustomFields
+        );
+        this.destroy();
+        return responseCustomFields;
+      }
+
+      return responseCustomFields;
+    } catch (error) {
+      console.error("Erro ao buscar CPF SWS:", error);
+      this.destroy();
       throw error;
     }
   }

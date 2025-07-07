@@ -36,14 +36,40 @@ router.post("/cadastrarPipelines/:id", async (req: Request, res: Response) => {
   // const tokenDescriptografado = descriptografarToken(cliente[0].token);
   // const subdomain = cliente[0].nome;
   // console.log("Token descriptografado:", tokenDescriptografado);
-  const subdomain = "cardosogarage";
+  const subdomain = "sedacar";
   const tokenDescriptografado =
-    "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsImp0aSI6ImE3NDAyN2JjNjczNjdhOGFjZDRhOTEwMjM5MDRiNDQ1OTJiNzljZTE2M2JmMzdmODgyMzcwYWM2Zjk4YWU1YWMwOGY2NWM2MzFmZDM1Njc1In0.eyJhdWQiOiI4ZmE2NTY4NC1mZjRmLTQzMzEtOGRhOC0yZDUwZjViMDY1Y2QiLCJqdGkiOiJhNzQwMjdiYzY3MzY3YThhY2Q0YTkxMDIzOTA0YjQ0NTkyYjc5Y2UxNjNiZjM3Zjg4MjM3MGFjNmY5OGFlNWFjMDhmNjVjNjMxZmQzNTY3NSIsImlhdCI6MTc1MTAzNTUwOCwibmJmIjoxNzUxMDM1NTA4LCJleHAiOjE4MTYzMDA4MDAsInN1YiI6IjEwMjgxNTk5IiwiZ3JhbnRfdHlwZSI6IiIsImFjY291bnRfaWQiOjM0ODAxNjAzLCJiYXNlX2RvbWFpbiI6ImtvbW1vLmNvbSIsInZlcnNpb24iOjIsInNjb3BlcyI6WyJjcm0iLCJmaWxlcyIsImZpbGVzX2RlbGV0ZSIsIm5vdGlmaWNhdGlvbnMiLCJwdXNoX25vdGlmaWNhdGlvbnMiXSwiaGFzaF91dWlkIjoiYzk0ZDM2MmQtYzNlOC00NGJjLWJjZDUtN2IwYmNkODg3YmQ3IiwiYXBpX2RvbWFpbiI6ImFwaS1jLmtvbW1vLmNvbSJ9.IEjyI1kxQEf846ito1KgY9cSCWz3jSn6FSfvE9z_o9kHBDkxkG_gDy1baCp9sgHBkY-fKrTUQoNxsacbMOq8-2L6GiJec0mlycavXHzrk36_B93mMIjeWxJT8ykJXwQaao5_qcVO_av7dj0W30JJo5FAEOfjwtgGT4x13MmVKb3FAukXF3ZJcdrDaWtV-QAqoT2xXmqwkLzICBBa815Hbl_x6c7QbCD_tu-QSQ8LVpKFcQJ0lD3p0hjH8xl5E6QawedTsqgu2XOH8HaiZ_bhhYEsu4k3P--c0N13-DRGKHC3lVdATFn3Qek8sg3_2-mvrGsTelNcFYDeizUKSsrNOg";
+    "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsImp0aSI6IjNmOGMwYzU4MzFkYzU0ODJkMjhlM2EzNDM3MzJiYTIyNzg0ZWYzN2MyZmQyODlhMThhODY0NDIyNDJmZThiYzE2NjFhOGQwMjZkZmFiNTRmIn0.eyJhdWQiOiJhY2Q3MjA4YS0wMzVjLTQxNWQtOWJmNi05NmNjZTgwMzMzMWIiLCJqdGkiOiIzZjhjMGM1ODMxZGM1NDgyZDI4ZTNhMzQzNzMyYmEyMjc4NGVmMzdjMmZkMjg5YTE4YTg2NDQyMjQyZmU4YmMxNjYxYThkMDI2ZGZhYjU0ZiIsImlhdCI6MTc1MTg5OTg1MywibmJmIjoxNzUxODk5ODUzLCJleHAiOjE4MDkyMTYwMDAsInN1YiI6IjEwMjgxNTk5IiwiZ3JhbnRfdHlwZSI6IiIsImFjY291bnRfaWQiOjM0ODQ1ODM1LCJiYXNlX2RvbWFpbiI6ImtvbW1vLmNvbSIsInZlcnNpb24iOjIsInNjb3BlcyI6WyJjcm0iLCJmaWxlcyIsImZpbGVzX2RlbGV0ZSIsIm5vdGlmaWNhdGlvbnMiLCJwdXNoX25vdGlmaWNhdGlvbnMiXSwiaGFzaF91dWlkIjoiOTVmMDkzYzQtMGFjYi00NGUxLWJkZDEtYWY3YjE0MjI3NDNkIiwiYXBpX2RvbWFpbiI6ImFwaS1jLmtvbW1vLmNvbSJ9.fPsc3EoM7hLfHk40iFrgrcIxj0MiQyE2XveptZWbJ0C5w_DHDgPjW8qUyfgvAYzhYZ5n_3yQK8FsfqWiUfUpGTwkdpLUhWgacz-ozrZCncWyFWwa2AJZBX6W5McPe3ngJ6OeXRA0VOZaY1eWsA52RHNEb7DC3OzXJWxwsbGq3yLjR5_AQCXvokIQynZmFzbh2Gr_t7SEKb-vJuI59qAMWgFxmFziV7B1eXd0Oxq3TrZllhuS77h2JdV-TIN5EeVQj8v0XobLL8_u7gUY3KuWMx9QNLZZowYwPaIjrnGy0_Z7urpFuKpu02FeEjiSWP0Tlfz79kOIRxw5pJPnWYXWgw";
   const response = await kommoController.cadastrarPipelines(
     subdomain as string,
     tokenDescriptografado as string
   );
 
   res.status(201).json({ data: response });
+});
+
+// ----------- FORTALEZA -----------
+
+router.post("/buscarCpfSws", async (req: Request, res: Response) => {
+  // Extrai o id do lead do formato de entrada esperado
+  // const leadIdFromBody = req.body?.[0]?.leads?.add?.[0]?.id;
+  // const lead_id = leadIdFromBody;
+  const lead_id = req.body?.lead_id;
+  try {
+    const cliente = await db("select nome, token from clientes where id = 28");
+    console.log("Cliente encontrado:", cliente);
+    const tokenDescriptografado = descriptografarToken(cliente[0].token);
+    const subdomain = cliente[0].nome;
+    const kommoCliente = { subdomain, tokenDescriptografado };
+
+    console.log(req.body)
+    const response = await kommoController.buscarCpfSws(
+      kommoCliente,
+      lead_id
+    );
+
+    res.status(200).json({ data: response });
+  } catch (error) {
+    res.status(500).json({ error: "Erro ao buscar CPF no SWS" });
+  }
 });
 export default router;

@@ -49,10 +49,9 @@ router.post("/cadastrarPipelines/:id", async (req: Request, res: Response) => {
 
 // ----------- FORTALEZA -----------
 
-router.post("/buscarCpfSws", async (req: Request, res: Response) => {
+router.get("/buscarCpfSws/:lead_id", async (req: Request, res: Response) => {
   // Extrai o id do lead do formato de entrada esperado
-  const leadIdFromBody = req.body?.[0]?.leads?.add?.[0]?.id;
-  const lead_id = leadIdFromBody;
+  const lead_id = req.params.lead_id;
 
   try {
     const cliente = await db("select nome, token from clientes where id = 28");
@@ -61,10 +60,10 @@ router.post("/buscarCpfSws", async (req: Request, res: Response) => {
     const subdomain = cliente[0].nome;
     const kommoCliente = { subdomain, tokenDescriptografado };
 
-    console.log(req.body)
+    console.log(req.body);
     const response = await kommoController.buscarCpfSws(
       kommoCliente,
-      lead_id
+      Number(lead_id)
     );
 
     res.status(200).json({ data: response });

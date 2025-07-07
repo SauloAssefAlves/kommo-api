@@ -56,7 +56,7 @@ router.post("/buscarCpfSws", async (req: Request, res: Response) => {
 
   try {
     const cliente = await db("select nome, token from clientes where id = 28");
-    console.log("Cliente encontrado:", cliente);
+    console.log("Cliente encontrado para SWS:", cliente[0].nome);
     const tokenDescriptografado = descriptografarToken(cliente[0].token);
     const subdomain = cliente[0].nome;
     const kommoCliente = { subdomain, tokenDescriptografado };

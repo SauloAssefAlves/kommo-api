@@ -404,7 +404,6 @@ export class KommoController {
       const mainContact = lead._embedded.contacts.find((c: any) => c.is_main);
       if (mainContact) {
         mainContactId = mainContact.id;
-        console.log("ID do contato principal:", mainContactId);
       } else {
         console.log("Nenhum contato principal encontrado.");
       }
@@ -412,8 +411,6 @@ export class KommoController {
       console.log("Lead não possui contatos vinculados.");
     }
 
-    console.log("ID do lead:", lead_id);
-    console.log("ID do contato principal:", mainContactId);
     const contato = await this.clienteModel.getContactById(
       mainContactId as number
     );
@@ -431,9 +428,7 @@ export class KommoController {
       cpf = cpfField.values[0].value.vat_id;
       }
     }
-    console.log("CPF encontrado:", cpf);
     function toIso8601(dateStr) {
-      console.log("Convertendo data para timestamp local:", dateStr);
       if (!dateStr || dateStr === "N/A") return dateStr;
       // yyyy-mm-dd
       if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
@@ -495,8 +490,6 @@ export class KommoController {
         subdomain,
         tokenDescriptografado
       );
-      console.log("Email do SWS:", email);
-      console.log("Senha do SWS:", password);
       const token = await loginSws(email, password);
       const infoCpf = await searchCpf(token, cpf);
       if (infoCpf.success === false) {
@@ -509,7 +502,6 @@ export class KommoController {
         this.destroy();
         return infoCpf;
       }
-      console.log("CPF encontrado:", infoCpf);
       // Verifica se os campos necessários estão presentes
       const camposNecessarios = [
         { name: "Plano contratado", value: infoCpf.adesao.plano.nome },
@@ -531,7 +523,6 @@ export class KommoController {
         },
       ];
 
-      console.log("Campos necessários:", camposNecessarios);
       // Função para formatar data no padrão brasileiro (dd/mm/yyyy)
       function formatDateBr(dateStr: string) {
         if (!dateStr || dateStr === "N/A") return "N/A";

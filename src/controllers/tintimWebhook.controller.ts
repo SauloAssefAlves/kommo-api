@@ -121,6 +121,7 @@ export class TintimWebhookController {
           empresa_id: cliente.empresa_id,
           causa: "Lead não encontrado pelo telefone",
           source: webhookData.source,
+          origem: "WhastApp",
           midia: midia,
         };
 
@@ -208,6 +209,7 @@ export class TintimWebhookController {
         telefone: telefone,
         empresa_id: cliente.empresa_id,
         source: webhookData.source,
+        origem: "WhastApp",
         midia: midia,
       };
       const dataAtual = new Date();
@@ -228,6 +230,7 @@ export class TintimWebhookController {
         empresa_id: cliente.empresa_id,
         causa: "Erro do servidor",
         source: webhookData.source,
+        origem: "WhastApp",
         midia: midia,
       };
 

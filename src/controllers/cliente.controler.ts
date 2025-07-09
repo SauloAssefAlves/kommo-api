@@ -364,6 +364,7 @@ SELECT
     mo.data_criacao,
     mo.midia,
     mo.source,
+    mo.origem,
     c.nome as nome_empresa
 FROM 
     monitoramento_tintim mo

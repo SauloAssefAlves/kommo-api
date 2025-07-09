@@ -1,6 +1,5 @@
 import pkg from "pg";
-import CryptoJS from "crypto-js"; 
-
+import CryptoJS from "crypto-js";
 
 const { Pool } = pkg;
 
@@ -168,6 +167,7 @@ type MonitoramentoTintim = {
   telefone: string;
   source: string;
   midia: string;
+  origem: string;
 };
 export async function addMonitoramentoTintim(data: MonitoramentoTintim) {
   const {
@@ -182,6 +182,7 @@ export async function addMonitoramentoTintim(data: MonitoramentoTintim) {
     telefone,
     source,
     midia,
+    origem,
   } = data;
 
   await db(
@@ -196,9 +197,10 @@ export async function addMonitoramentoTintim(data: MonitoramentoTintim) {
       empresa_id,
       telefone,
       source,
-      midia
+      midia,
+      origem,
     ) VALUES (
-      $1, $2, $3, $4, $5, $6 ,$7, $8, $9, $10, $11
+      $1, $2, $3, $4, $5, $6 ,$7, $8, $9, $10, $11, $12
     );`,
     [
       nome_campanha,
@@ -212,6 +214,7 @@ export async function addMonitoramentoTintim(data: MonitoramentoTintim) {
       telefone,
       source,
       midia,
+      origem,
     ]
   );
 }

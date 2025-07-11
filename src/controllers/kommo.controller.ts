@@ -399,18 +399,26 @@ export class KommoController {
     );
     const lead = await this.clienteModel.buscarLeadPorId(lead_id);
 
-
-
     // Busca o valor do campo "API Consulta CPF"
     let cpfApiConsulta: string | undefined;
     if (lead && Array.isArray(lead.custom_fields_values)) {
       const cpfApiField = lead.custom_fields_values.find(
         (field: any) => field.field_name === "API Consulta CPF"
       );
-      if (cpfApiField && Array.isArray(cpfApiField.values) && cpfApiField.values[0]?.value) {
+      if (
+        cpfApiField &&
+        Array.isArray(cpfApiField.values) &&
+        cpfApiField.values[0]?.value
+      ) {
         cpfApiConsulta = cpfApiField.values[0].value;
-        console.log("CPF encontrado no campo API Consulta CPF:", cpfApiConsulta);
+        console.log(
+          "CPF encontrado no campo API Consulta CPF:",
+          cpfApiConsulta
+        );
       }
+    }
+    function capitalizeFirstLetter(val) {
+      return String(val).charAt(0).toUpperCase() + String(val).slice(1);
     }
 
     console.log("CPF API Consulta:", cpfApiConsulta);
@@ -510,6 +518,7 @@ export class KommoController {
       );
       const token = await loginSws(email, password);
       const infoCpf = await searchCpf(token, cpfApiConsulta as string);
+      console.log("Informações do CPF:", infoCpf);
       if (infoCpf.success === false) {
         console.log("CPF não encontrado ou inválido:", infoCpf.mensagem);
         const nota = {
@@ -524,22 +533,42 @@ export class KommoController {
       const camposNecessarios = [
         { name: "Plano contratado", value: infoCpf.adesao.plano.nome },
         {
-          name: "Tipo de adesão",
+          name: "Status da adesão",
           value: getTipoAdesaoPorNome(infoCpf.adesao.status.nome),
         },
         {
-          name: "Data da contratação",
+          name: "Data inicio adesão",
           value: toIso8601(infoCpf.adesao.data_inicio),
         },
         {
-          name: "Data final do plano",
+          name: "Data final adesão",
           value: toIso8601(infoCpf.adesao.data_final),
         },
         {
-          name: "Data final do plano",
-          value: toIso8601(infoCpf.adesao.data_final),
+          name: "ID Adesão",
+          value: infoCpf.adesao.id?.toString() || "N/A",
         },
+        {
+          name: "Situação para check-in",
+          value: capitalizeFirstLetter(infoCpf.situacao_checkin),
+        },
+
+        //Vencimento próxima parcela
+        //Valor da próxima parcela
+        //Situação para check-in
       ];
+      if (infoCpf.parcelas && infoCpf.parcelas.length > 0) {
+        camposNecessarios.push(
+          {
+            name: "Vencimento próxima parcela",
+            value: toIso8601(infoCpf.parcelas[0].vencimento),
+          },
+          {
+            name: "Valor da próxima parcela",
+            value: `R$ ${String(infoCpf.parcelas[0].valor)}` || "N/A",
+          }
+        );
+      }
 
       // Função para formatar data no padrão brasileiro (dd/mm/yyyy)
       function formatDateBr(dateStr: string) {
@@ -609,7 +638,7 @@ export class KommoController {
         return responseCustomFields;
       }
 
-      // return responseCustomFields;
+      return responseCustomFields;
     } catch (error) {
       console.error("Erro ao buscar CPF SWS:", error);
       this.destroy();

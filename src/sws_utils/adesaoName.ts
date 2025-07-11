@@ -10,7 +10,7 @@ export function getTipoAdesaoPorNome(statusNomeEnum) {
     case "quitada":
       return "Quitada";
     case "inadimplente":
-      return "Inadiplente";
+      return "Inadimplente";
     case "cancelada":
       return "Cancelada";
     case "vencida":

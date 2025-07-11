@@ -51,6 +51,8 @@ router.post("/cadastrarPipelines/:id", async (req: Request, res: Response) => {
 
 router.post("/buscarCpfSws", async (req: Request, res: Response) => {
   // Extrai o id do lead do formato de entrada esperado
+  console.log("Requisição recebida para buscar CPF no SWS");
+  console.log("Corpo da requisição:", req.body);
   const { leads } = req.body;
   const lead_id = leads.add.id;
 

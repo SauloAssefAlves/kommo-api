@@ -51,8 +51,8 @@ router.post("/cadastrarPipelines/:id", async (req: Request, res: Response) => {
 
 router.post("/buscarCpfSws", async (req: Request, res: Response) => {
   // Extrai o id do lead do formato de entrada esperado
-  const { leads } = req.body[0];
-  const lead_id = leads.add[0].id;
+  const { leads } = req.body;
+  const lead_id = leads.add.id;
 
   try {
     const cliente = await db("select nome, token from clientes where id = 28");

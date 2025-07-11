@@ -398,36 +398,54 @@ export class KommoController {
       tokenDescriptografado
     );
     const lead = await this.clienteModel.buscarLeadPorId(lead_id);
-    // Pega o id do contato principal (main)
-    let mainContactId: number | null = null;
-    if (lead && lead._embedded && Array.isArray(lead._embedded.contacts)) {
-      const mainContact = lead._embedded.contacts.find((c: any) => c.is_main);
-      if (mainContact) {
-        mainContactId = mainContact.id;
-      } else {
-        console.log("Nenhum contato principal encontrado.");
+
+
+
+    // Busca o valor do campo "API Consulta CPF"
+    let cpfApiConsulta: string | undefined;
+    if (lead && Array.isArray(lead.custom_fields_values)) {
+      const cpfApiField = lead.custom_fields_values.find(
+        (field: any) => field.field_name === "API Consulta CPF"
+      );
+      if (cpfApiField && Array.isArray(cpfApiField.values) && cpfApiField.values[0]?.value) {
+        cpfApiConsulta = cpfApiField.values[0].value;
+        console.log("CPF encontrado no campo API Consulta CPF:", cpfApiConsulta);
       }
-    } else {
-      console.log("Lead não possui contatos vinculados.");
     }
 
-    const contato = await this.clienteModel.getContactById(
-      mainContactId as number
-    );
+    console.log("CPF API Consulta:", cpfApiConsulta);
+    // Pega o id do contato principal (main)
+    // let mainContactId: number | null = null;
+    // if (lead && lead._embedded && Array.isArray(lead._embedded.contacts)) {
+    //   const mainContact = lead._embedded.contacts.find((c: any) => c.is_main);
+    //   if (mainContact) {
+    //     mainContactId = mainContact.id;
+    //   } else {
+    //     console.log("Nenhum contato principal encontrado.");
+    //   }
+    // } else {
+    //   console.log("Lead não possui contatos vinculados.");
+    // }
+
+    // const contato = await this.clienteModel.getContactById(
+    //   mainContactId as number
+    // );
     // Busca o CPF (vat_id) do contato nos campos customizados
-    let cpf: string | undefined;
-    if (contato && Array.isArray(contato.custom_fields_values)) {
-      const cpfField = contato.custom_fields_values.find(
-      (field: any) => field.field_name === "CPF" && field.field_type === "legal_entity"
-      );
-      if (
-      cpfField &&
-      Array.isArray(cpfField.values) &&
-      cpfField.values[0]?.value?.vat_id
-      ) {
-      cpf = cpfField.values[0].value.vat_id;
-      }
-    }
+    // let cpf: string | undefined;
+    // if (contato && Array.isArray(contato.custom_fields_values)) {
+    //   const cpfField = contato.custom_fields_values.find(
+    //     (field: any) =>
+    //       field.field_name === "CPF" && field.field_type === "legal_entity"
+    //   );
+    //   if (
+    //     cpfField &&
+    //     Array.isArray(cpfField.values) &&
+    //     cpfField.values[0]?.value?.vat_id
+    //   ) {
+    //     cpf = cpfField.values[0].value.vat_id;
+    //   }
+    // }
+
     function toIso8601(dateStr) {
       if (!dateStr || dateStr === "N/A") return dateStr;
       // yyyy-mm-dd
@@ -491,12 +509,12 @@ export class KommoController {
         tokenDescriptografado
       );
       const token = await loginSws(email, password);
-      const infoCpf = await searchCpf(token, cpf);
+      const infoCpf = await searchCpf(token, cpfApiConsulta as string);
       if (infoCpf.success === false) {
         console.log("CPF não encontrado ou inválido:", infoCpf.mensagem);
         const nota = {
           leadId: lead_id,
-          text: `CPF ${cpf} não encontrado ou inválido: ${infoCpf.mensagem}`,
+          text: `CPF ${cpfApiConsulta} não encontrado ou inválido: ${infoCpf.mensagem}`,
         };
         await this.clienteModel.adicionarNota(nota);
         this.destroy();
@@ -553,12 +571,14 @@ export class KommoController {
           "Consulta de CPF realizada:\n" +
           "--------------------------------\n" +
           "Nome: " +
-          capitalizeFirstLetter(infoCpf.nome || infoCpf.adesao.plano.nome || "N/A") +
+          capitalizeFirstLetter(
+            infoCpf.nome || infoCpf.adesao.plano.nome || "N/A"
+          ) +
           "\n" +
           "Situação: " +
           capitalizeFirstLetter(
-        (infoCpf.adesao?.status?.nome && infoCpf.adesao?.status?.nome) ||
-          "N/A"
+            (infoCpf.adesao?.status?.nome && infoCpf.adesao?.status?.nome) ||
+              "N/A"
           ) +
           "\n" +
           "Plano: " +
@@ -571,7 +591,7 @@ export class KommoController {
           formatDateBr(infoCpf.adesao?.data_final) +
           "\n" +
           "--------------------------------",
-        typeNote: "common",
+        typeNote: "extended_service_message",
       };
       await this.clienteModel.adicionarNota(nota);
       const responseCustomFields = await this.updateCustomFields({
@@ -589,7 +609,7 @@ export class KommoController {
         return responseCustomFields;
       }
 
-      return responseCustomFields;
+      // return responseCustomFields;
     } catch (error) {
       console.error("Erro ao buscar CPF SWS:", error);
       this.destroy();

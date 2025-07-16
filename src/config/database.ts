@@ -182,7 +182,7 @@ export async function addMonitoramentoTintim(data: MonitoramentoTintim) {
     telefone,
     source,
     midia,
-    origem,
+    origem
   } = data;
 
   await db(
@@ -198,7 +198,7 @@ export async function addMonitoramentoTintim(data: MonitoramentoTintim) {
       telefone,
       source,
       midia,
-      origem,
+      origem
     ) VALUES (
       $1, $2, $3, $4, $5, $6 ,$7, $8, $9, $10, $11, $12
     );`,

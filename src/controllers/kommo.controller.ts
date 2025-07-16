@@ -589,10 +589,6 @@ export class KommoController {
         return date.toLocaleDateString("pt-BR");
       }
 
-      function capitalizeFirstLetter(str: string) {
-        if (!str) return str;
-        return str.charAt(0).toUpperCase() + str.slice(1);
-      }
 
       const nota = {
         leadId: lead_id,

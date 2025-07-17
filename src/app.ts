@@ -9,7 +9,8 @@ import kommoRoute from "./routes/kommo.routers.js";
 const app = express();
 
 app.use(cors());
-app.use(express.json());
+app.use(express.json()); // Para application/json
+app.use(express.urlencoded({ extended: true })); // ✅ Para application/x-www-form-urlencoded
 app.use("/auth", loginRoute);
 
 app.use("/tintimWebhook", tintimWebhookRoutes);

@@ -19,7 +19,8 @@ app.use("/kommo", kommoRoute);
 
 app.post("/teste", (req, res) => {
   console.log("Rota de teste acessada");
-  res.send(req);
+  const safeJson = JSON.stringify(req.body);
+  res.send(safeJson);
 });
 
 export default app;

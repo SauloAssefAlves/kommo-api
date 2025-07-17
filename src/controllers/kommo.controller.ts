@@ -398,6 +398,11 @@ export class KommoController {
       tokenDescriptografado
     );
     const lead = await this.clienteModel.buscarLeadPorId(lead_id);
+    if (!lead) {
+      console.error("Lead não encontrado com o ID:", lead_id);
+      this.destroy();
+      return { success: false, mensagem: "Lead não encontrado." };
+    }
 
     // Busca o valor do campo "API Consulta CPF"
     let cpfApiConsulta: string | undefined;
@@ -588,7 +593,6 @@ export class KommoController {
         if (isNaN(date.getTime())) return dateStr;
         return date.toLocaleDateString("pt-BR");
       }
-
 
       const nota = {
         leadId: lead_id,

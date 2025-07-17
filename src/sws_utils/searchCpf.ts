@@ -36,6 +36,7 @@ type SearchCpfResult = SearchCpfResponse | SearchCpfErrorResponse;
 
 export async function searchCpf(token, cpf): Promise<SearchCpfResult> {
   try {
+    cpf = cpf.replace(/\D/g, "");
     const response = await fetch(
       `https://apiteste.sociofortaleza.com.br/api/v1/pessoas/${cpf}/search_cpf`,
       {
@@ -50,7 +51,6 @@ export async function searchCpf(token, cpf): Promise<SearchCpfResult> {
     //   throw new Error(`HTTP error! status: ${response.status}`);
     // }
     const data = await response.json();
- 
 
     if (data.data.id) {
       const idAdesao = data.data.adesao.id;

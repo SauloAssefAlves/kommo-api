@@ -18,8 +18,9 @@ app.use("/cliente", clienteRoutes);
 app.use("/kommo", kommoRoute);
 
 app.post("/teste", (req, res) => {
-  console.log("Rota de teste acessada");
   const safeJson = JSON.stringify(req.body);
+  console.log("Rota de teste acessada", safeJson);
+
   res.send(safeJson);
 });
 

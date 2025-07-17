@@ -1,4 +1,3 @@
-
 import express from "express";
 import cors from "cors";
 import tintimWebhookRoutes from "./routes/tintimWebhookRoutes.js";
@@ -19,7 +18,8 @@ app.use("/cliente", clienteRoutes);
 app.use("/kommo", kommoRoute);
 
 app.get("/teste", (req, res) => {
-  res.send("🚀 Servidor rodando!");
+  console.log("Rota de teste acessada");
+  res.send(req);
 });
 
 export default app;

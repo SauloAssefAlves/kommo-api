@@ -66,7 +66,7 @@ export async function searchCpf(token, cpf): Promise<SearchCpfResult> {
       );
       const parcelas = await response2.json();
       const dataWithParcelas = {
-        suscess: true,
+        success: true,
         situacao_checkin: parcelas.data.stituacao_para_checkin,
         ...data.data,
         parcelas: parcelas.data.parcelas,

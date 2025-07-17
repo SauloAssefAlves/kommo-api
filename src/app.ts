@@ -17,7 +17,7 @@ app.use("/portais", portaisRoutes);
 app.use("/cliente", clienteRoutes);
 app.use("/kommo", kommoRoute);
 
-app.get("/teste", (req, res) => {
+app.post("/teste", (req, res) => {
   console.log("Rota de teste acessada");
   res.send(req);
 });

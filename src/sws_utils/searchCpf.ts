@@ -51,6 +51,10 @@ export async function searchCpf(token, cpf): Promise<SearchCpfResult> {
     //   throw new Error(`HTTP error! status: ${response.status}`);
     // }
     const data = await response.json();
+    if (!data.success) {
+      console.error("Erro ao buscar CPF na SWS:", data.mensagem);
+      return { success: false, mensagem: data.errors[0] };
+    }
 
     if (data.data.id) {
       const idAdesao = data.data.adesao.id;

@@ -18,10 +18,12 @@ app.use("/cliente", clienteRoutes);
 app.use("/kommo", kommoRoute);
 
 app.post("/teste", (req, res) => {
-  const safeJson = JSON.stringify(req);
-  console.log("Rota de teste acessada", safeJson);
-
-  res.send(safeJson);
+  console.log("Body:", req.body);
+  console.log("Query:", req.query);
+  console.log("Headers:", req.headers);
+  console.log("Method:", req.method);
+  console.log("URL:", req.url);
+  res.send("Inspeção feita");
 });
 
 export default app;

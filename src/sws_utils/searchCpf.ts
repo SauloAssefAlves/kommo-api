@@ -38,7 +38,7 @@ export async function searchCpf(token, cpf): Promise<SearchCpfResult> {
   try {
     cpf = cpf.replace(/\D/g, "");
     const response = await fetch(
-      `https://apiteste.sociofortaleza.com.br/api/v1/pessoas/${cpf}/search_cpf`,
+      `https://api.sociofortaleza.com.br/api/v1/pessoas/${cpf}/search_cpf`,
       {
         method: "GET",
         headers: {
@@ -60,7 +60,7 @@ export async function searchCpf(token, cpf): Promise<SearchCpfResult> {
     if (data.data.id) {
       const idAdesao = data.data.adesao.id;
       const response2 = await fetch(
-        `https://apiteste.sociofortaleza.com.br/api/v1/adesoes/${idAdesao}/parcelas?cpf=${cpf}`,
+        `https://api.sociofortaleza.com.br/api/v1/adesoes/${idAdesao}/parcelas?cpf=${cpf}`,
         {
           method: "GET",
           headers: {

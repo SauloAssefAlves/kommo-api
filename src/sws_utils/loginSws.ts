@@ -35,7 +35,7 @@ interface LoginResponse {
 export async function loginSws(email, password): Promise<string | void> {
   try {
     const response = await fetch(
-      "https://apiteste.sociofortaleza.com.br/api/v1/auth/login",
+      "https://api.sociofortaleza.com.br/api/v1/auth/login",
       {
         method: "POST",
         headers: {

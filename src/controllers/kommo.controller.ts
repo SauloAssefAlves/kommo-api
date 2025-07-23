@@ -599,6 +599,9 @@ export class KommoController {
         text:
           "Consulta de CPF realizada:\n" +
           "--------------------------------\n" +
+          "CPF: " +
+          (cpfApiConsulta || "N/A") +
+          "\n" +
           "Nome: " +
           capitalizeFirstLetter(
             infoCpf.nome || infoCpf.adesao.plano.nome || "N/A"

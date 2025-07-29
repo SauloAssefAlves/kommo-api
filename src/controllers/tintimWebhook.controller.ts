@@ -215,9 +215,8 @@ export class TintimWebhookController {
         origem: "WhastApp",
         midia: midia,
       };
-      // Ajusta para o horário de Brasília (UTC-3)
-      const dataAtual = new Date();
-      dataAtual.setHours(dataAtual.getHours() - 3);
+
+      const dataAtual = new Date();;
       await adicionarDataTintim(dataAtual, cliente.empresa_id);
 
       await addMonitoramentoTintim(dataInfo);

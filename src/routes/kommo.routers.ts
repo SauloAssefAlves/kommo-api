@@ -62,7 +62,6 @@ router.post("/buscarCpfSws/:lead_id", async (req: Request, res: Response) => {
     const subdomain = cliente[0].nome;
     const kommoCliente = { subdomain, tokenDescriptografado };
 
-    console.log(req.body);
     const response = await kommoController.buscarCpfSws(
       kommoCliente,
       Number(lead_id)
@@ -71,6 +70,93 @@ router.post("/buscarCpfSws/:lead_id", async (req: Request, res: Response) => {
     res.status(200).json({ data: response });
   } catch (error) {
     res.status(500).json({ error: "Erro ao buscar CPF no SWS" });
+  }
+});
+
+// ----------- Vox2You -----------
+
+interface Lead {
+  nome: string;
+  telefone: number;
+  unidade: string;
+  cursodeinteresse: string;
+  midia: string;
+  origem: string;
+  email: string;
+  profissao: string;
+  utm_content: string;
+  utm_medium: string;
+  utm_campaign: string;
+  utm_source: string;
+  utm_term: string;
+  utm_referrer: string;
+  referrer: string;
+  gclientid: string;
+  gclid: string;
+  fbclid: string;
+}
+
+router.post("/cadastrarLeadVox2you", async (req: Request, res: Response) => {
+  // Extrai o id do lead do formato de entrada esperado
+  console.log("Cadastrando lead no Vox2You:", req.body);
+
+  const {
+    lead,
+    info,
+    subdomain,
+    funilId,
+    contaId,
+  }: {
+    lead: Lead;
+    info: any;
+    subdomain: string;
+    funilId: number;
+    contaId: number;
+  } = req.body;
+
+  try {
+    const cliente = await db(
+      "select nome, token from clientes where nome = $1",
+      [subdomain]
+    );
+    console.log("Cliente encontrado", cliente[0].nome);
+    const tokenDescriptografado = descriptografarToken(cliente[0].token);
+    const kommoCliente = { subdomain, tokenDescriptografado };
+    let valido = false;
+    const options = {
+      method: "GET",
+      headers: {
+        accept: "application/json",
+        authorization: "Bearer " + tokenDescriptografado,
+      },
+    };
+
+    try {
+      const response = await fetch(`https://${subdomain}.kommo.com/api/v4/account`, options);
+      const res = await response.json();
+      if (res.id === contaId) {
+      valido = true;
+      }
+    } catch (err) {
+      console.error("Erro ao validar o contaID:", err);
+      res.status(500).json({ error: "Erro ao validar o contaID" });
+      return;
+    }
+    if (valido) {
+      const response = await kommoController.cadastrarLeadVox2You(
+        kommoCliente,
+        lead,
+        info,
+        funilId,
+      );
+
+      res.status(200).json({ data: response });
+    }else{
+      res.status(403).json({ error: "Conta ID inválido" });
+    }
+
+  } catch (error) {
+    res.status(500).json({ error: "Erro ao cadastrar lead no Vox2You" });
   }
 });
 export default router;

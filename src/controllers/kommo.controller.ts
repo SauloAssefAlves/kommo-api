@@ -388,6 +388,151 @@ export class KommoController {
     }
   }
 
+  public async cadastrarLeadVox2You(
+    kommoCliente: { subdomain: string; tokenDescriptografado: string },
+    lead: {
+      nome: string;
+      telefone: number;
+      unidade: string;
+      cursodeinteresse: string;
+      midia: string;
+      origem: string;
+      email: string;
+      profissao: string;
+      utm_content: string;
+      utm_medium: string;
+      utm_campaign: string;
+      utm_source: string;
+      utm_term: string;
+      utm_referrer: string;
+      referrer: string;
+      gclientid: string;
+      gclid: string;
+      fbclid: string;
+    },
+    info: any,
+    funilId: number,
+  ): Promise<{ success: boolean; mensagem: string }> {
+    const { subdomain, tokenDescriptografado } = kommoCliente;
+    this.clienteModel = KommoModel.getInstance(
+      subdomain,
+      tokenDescriptografado
+    );
+
+    const contatoBody = [
+      {
+        first_name: lead.nome,
+        custom_fields_values: [
+          {
+            field_code: "PHONE",
+            values: [{ value: lead.telefone.toString(), enum_code: "WORK" }],
+          },
+          {
+            field_code: "EMAIL",
+            values: [{ value: lead.email, enum_code: "WORK" }],
+          },
+        ],
+      },
+    ];
+
+    const responseContact = await this.clienteModel.cadastrarContact(
+      contatoBody
+    );
+
+    const idContact = responseContact._embedded.contacts[0].id;
+
+    console.log("Cadastrando lead na Vox2You:", lead, info);
+    let leadBody = [
+      {
+        name: lead.nome,
+        pipeline_id: funilId,
+        custom_fields_values: [
+          { field_code: "UTM_CONTENT", values: [{ value: lead.utm_content }] },
+          { field_code: "UTM_MEDIUM", values: [{ value: lead.utm_medium }] },
+          {
+            field_code: "UTM_CAMPAIGN",
+            values: [{ value: lead.utm_campaign }],
+          },
+          { field_code: "UTM_SOURCE", values: [{ value: lead.utm_source }] },
+          { field_code: "UTM_TERM", values: [{ value: lead.utm_term }] },
+          {
+            field_code: "UTM_REFERRER",
+            values: [{ value: lead.utm_referrer }],
+          },
+          { field_code: "REFERRER", values: [{ value: lead.referrer }] },
+          { field_code: "GCLIENTID", values: [{ value: lead.gclientid }] },
+          { field_code: "GCLID", values: [{ value: lead.gclid }] },
+          { field_code: "FBCLID", values: [{ value: lead.fbclid }] },
+        ],
+        _embedded: {
+          contacts: [{ id: idContact }],
+        },
+      },
+    ];
+
+    const customFieldsIds = await this.clienteModel.buscarIdsPorNomesCampos([
+      { nomeCampo: "Curso de Interesse", enumNome: lead.cursodeinteresse },
+      { nomeCampo: "Unidade", enumNome: lead.unidade },
+      { nomeCampo: "Profissão", enumNome: lead.profissao },
+      { nomeCampo: "Mídia", enumNome: lead.midia },
+      { nomeCampo: "Origem", enumNome: lead.origem },
+    ]);
+
+    for (const campo of customFieldsIds) {
+      if (campo.enumId !== null) {
+        leadBody[0].custom_fields_values.push({
+          field_id: campo.id,
+          values: [{ enum_id: campo.enumId }],
+        } as any);
+      }
+    }
+
+
+    const responseLead = await this.clienteModel.cadastrarLead(
+      JSON.stringify(leadBody)
+    );
+
+    const leadId = responseLead._embedded.leads[0].id;
+    const formatInfo = (obj: any, indent: string = ""): string => {
+      let result = "";
+      for (const [key, value] of Object.entries(obj)) {
+        const formattedKey = key
+          .replace(/_/g, " ")
+          .replace(/\b\w/g, (l) => l.toUpperCase());
+
+        if (
+          typeof value === "object" &&
+          value !== null &&
+          !Array.isArray(value)
+        ) {
+          result += `${indent}${formattedKey}:\n${formatInfo(
+            value,
+            indent + "  "
+          )}\n`;
+        } else if (Array.isArray(value)) {
+          result += `${indent}${formattedKey}: ${value.join(", ")}\n`;
+        } else {
+          result += `${indent}${formattedKey}: ${value || "N/A"}\n`;
+        }
+      }
+      return result;
+    };
+
+    const note = {
+      leadId: leadId,
+      text:
+        `Informações adicionais\n` +
+        `--------------------------------\n` +
+        `${formatInfo(info)}` +
+        `---------------------------------\n`,
+      typeNote: "common",
+    };
+
+    await this.clienteModel.adicionarNota(note);
+    console.log("Lead cadastrado com sucesso:");
+    return { success: true, mensagem: "Lead Adicionado com Sucesso" };
+  }
+
   public async buscarCpfSws(
     kommoCliente: { subdomain: string; tokenDescriptografado: string },
     lead_id: number

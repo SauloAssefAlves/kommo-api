@@ -82,7 +82,6 @@ export class KommoModel {
     console.log("🧹 Todas as instâncias foram limpas");
   }
 
-
   async getContactById(contactId: number): Promise<any | null> {
     try {
       const response = await this.api.get(`/contacts/${contactId}`);
@@ -484,7 +483,7 @@ export class KommoModel {
       return null;
     }
   }
-  async cadastrarLead(body): Promise<any | null> {
+  async cadastrarLead(body: any): Promise<any | null> {
     try {
       const response = await this.api.post("/leads", body);
       return response.data;

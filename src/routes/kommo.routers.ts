@@ -2,7 +2,7 @@ import { Router, Request, Response } from "express";
 import { KommoController } from "../controllers/kommo.controller.js";
 import { authenticateToken } from "../auth/middleware.js";
 import { db, descriptografarToken } from "../config/database.js";
-
+import { mockData } from "../utils/mocks.js";
 const router = Router();
 const kommoController = new KommoController();
 
@@ -73,46 +73,31 @@ router.post("/buscarCpfSws/:lead_id", async (req: Request, res: Response) => {
   }
 });
 
-// ----------- Vox2You -----------
+router.post("/mudarUsuarioResp", async (req: Request, res: Response) => {
+  // Extrai o id do lead do formato de entrada esperado
 
-interface Lead {
-  nome: string;
-  telefone: number;
-  unidade: string;
-  cursodeinteresse: string;
-  midia: string;
-  origem: string;
-  email: string;
-  profissao: string;
-  utm_content: string;
-  utm_medium: string;
-  utm_campaign: string;
-  utm_source: string;
-  utm_term: string;
-  utm_referrer: string;
-  referrer: string;
-  gclientid: string;
-  gclid: string;
-  fbclid: string;
-}
+  console.log(req.body)
+
+  try {
+    const cliente = await db("select nome, token from clientes where id = 28");
+
+
+    res.status(200).json({ data: "lead_id" });
+  } catch (error) {
+    res.status(500).json({ error: "Erro ao buscar CPF no SWS" });
+  }
+});
+
+// ----------- Vox2You -----------
 
 router.post("/cadastrarLeadVox2you", async (req: Request, res: Response) => {
   // Extrai o id do lead do formato de entrada esperado
   console.log("Cadastrando lead no Vox2You:", req.body);
 
-  const {
-    lead,
-    info,
-    subdomain,
-    funilId,
-    contaId,
-  }: {
-    lead: Lead;
-    info: any;
-    subdomain: string;
-    funilId: number;
-    contaId: number;
-  } = req.body;
+  const { fields } = req.body;
+  const subdomain = fields.subdomain.value;
+  const contaId = fields.contaId.value;
+  const funilId = fields.funilId.value;
 
   try {
     const cliente = await db(
@@ -132,10 +117,13 @@ router.post("/cadastrarLeadVox2you", async (req: Request, res: Response) => {
     };
 
     try {
-      const response = await fetch(`https://${subdomain}.kommo.com/api/v4/account`, options);
+      const response = await fetch(
+        `https://${subdomain}.kommo.com/api/v4/account`,
+        options
+      );
       const res = await response.json();
       if (res.id === contaId) {
-      valido = true;
+        valido = true;
       }
     } catch (err) {
       console.error("Erro ao validar o contaID:", err);
@@ -143,18 +131,59 @@ router.post("/cadastrarLeadVox2you", async (req: Request, res: Response) => {
       return;
     }
     if (valido) {
+      const { fields } = req.body;
+
+      // Mock data for testing - replace with actual req.body in production
+
+      // Use mockData.fields instead of fields for testing
+      const lead = {
+        nome: fields.nome.value,
+        telefone: fields.telefone.value,
+        unidade: fields.unidade.value,
+        cursodeinteresse: fields.cursodeinteresse.value,
+        midia: fields.midia.value,
+        origem: fields.origem.value,
+        email: fields.email.value,
+        profissao: fields.profissao.value,
+        utm_content: fields.utm_content.value,
+        utm_medium: fields.utm_medium.value,
+        utm_campaign: fields.utm_campaign.value,
+        utm_source: fields.utm_source.value,
+        utm_term: fields.utm_term.value,
+        utm_referrer: fields.utm_referrer.value,
+        referrer: fields.referrer.value,
+        gclientid: fields.gclientid.value,
+        gclid: fields.gclid.value,
+        fbclid: fields.fbclid.value,
+      };
+      const info = {
+        ...Object.fromEntries(
+          Object.entries(fields)
+            .filter(
+              ([key, field]: [string, any]) =>
+                field.type !== "hidden" &&
+                ![
+                  "nome",
+                  "telefone",
+                  "cursodeinteresse",
+                  "email",
+                  "profissao",
+                ].includes(key)
+            )
+            .map(([key, field]: [string, any]) => [key, field.value])
+        ),
+      };
       const response = await kommoController.cadastrarLeadVox2You(
         kommoCliente,
         lead,
         info,
-        funilId,
+        funilId
       );
 
       res.status(200).json({ data: response });
-    }else{
+    } else {
       res.status(403).json({ error: "Conta ID inválido" });
     }
-
   } catch (error) {
     res.status(500).json({ error: "Erro ao cadastrar lead no Vox2You" });
   }

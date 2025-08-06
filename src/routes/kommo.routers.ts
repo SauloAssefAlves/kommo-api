@@ -77,12 +77,12 @@ router.post("/mudarUsuarioResp", async (req: Request, res: Response) => {
   // Extrai o id do lead do formato de entrada esperado
 
   console.dir(req.body, { depth: null });
-  const lead_id = req.body.add[0].id;
+  const lead_info = req.body.leads.add[0]
 
   try {
     const cliente = await db("select nome, token from clientes where id = 28");
 
-    res.status(200).json({ data: "lead_id" });
+    res.status(200).json({ data: lead_info });
   } catch (error) {
     res.status(500).json({ error: "Erro ao buscar CPF no SWS" });
   }

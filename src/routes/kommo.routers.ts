@@ -76,11 +76,11 @@ router.post("/buscarCpfSws/:lead_id", async (req: Request, res: Response) => {
 router.post("/mudarUsuarioResp", async (req: Request, res: Response) => {
   // Extrai o id do lead do formato de entrada esperado
 
-  console.log(req.body)
+  console.dir(req.body, { depth: null });
+  const lead_id = req.body.add[0].id;
 
   try {
     const cliente = await db("select nome, token from clientes where id = 28");
-
 
     res.status(200).json({ data: "lead_id" });
   } catch (error) {

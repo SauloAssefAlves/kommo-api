@@ -542,4 +542,29 @@ export class KommoModel {
       return null;
     }
   }
+
+  async getManagersWithGroup() {
+    const response = await fetch(
+      `https://${this.subdomain}.kommo.com/ajax/get_managers_with_group/`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${this.token}`,
+          "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
+          Accept: "application/json",
+          "X-Requested-With": "XMLHttpRequest",
+        },
+        body: new URLSearchParams({
+          free_users: "Y", // ou remova esse campo se quiser todos os usuários
+        }).toString(),
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error(`Erro na requisição: ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    return data;
+  }
 }

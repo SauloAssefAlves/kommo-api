@@ -411,7 +411,7 @@ export class KommoController {
       fbclid: string;
     },
     info: any,
-    funilId: number,
+    funilId: number
   ): Promise<{ success: boolean; mensagem: string }> {
     const { subdomain, tokenDescriptografado } = kommoCliente;
     this.clienteModel = KommoModel.getInstance(
@@ -487,7 +487,6 @@ export class KommoController {
       }
     }
 
-
     const responseLead = await this.clienteModel.cadastrarLead(
       JSON.stringify(leadBody)
     );
@@ -531,6 +530,37 @@ export class KommoController {
     await this.clienteModel.adicionarNota(note);
     console.log("Lead cadastrado com sucesso:");
     return { success: true, mensagem: "Lead Adicionado com Sucesso" };
+  }
+
+  public async mudarUsuarioResp(kommoCliente, lead_info, account_id) {
+    const { subdomain, tokenDescriptografado } = kommoCliente;
+    this.clienteModel = KommoModel.getInstance(
+      subdomain,
+      tokenDescriptografado
+    );
+    const usuariosResp = await this.clienteModel.getManagersWithGroup();
+    const grupos = Object.fromEntries(
+      Object.entries(usuariosResp.groups).map(([key, value]) => [
+        key.replace(/^group_/, ""),
+        value,
+      ])
+    );
+
+    const lead = await this.clienteModel.buscarLeadPorId(lead_info.id);
+    if (!lead) {
+      console.error("Lead não encontrado com o ID:", lead_info.id);
+      this.destroy();
+      return { success: false, mensagem: "Lead não encontrado." };
+    }
+
+    const usuariosRespFiltrados = Object.values(usuariosResp.managers).filter(
+      (manager: any) =>
+        manager.group === `group_${lead.group_id}` &&
+        manager.id != lead.responsible_user_id
+    );
+
+    console.log(usuariosRespFiltrados);
+    return "response";
   }
 
   public async buscarCpfSws(

@@ -73,14 +73,58 @@ router.post("/buscarCpfSws/:lead_id", async (req: Request, res: Response) => {
   }
 });
 
+router.post("/statusUserResp", async (req: Request, res: Response) => {
+  // Extrai o id do lead do formato de entrada esperado
+
+  const { user_id, account_id, status } = req.body;
+
+  try {
+    const existe_user = await db(
+      `select * from status_users_resp where user_resp_id = $1 and account_id = $2`,
+      [user_id, account_id]
+    );
+    if (existe_user.length > 0) {
+      await db(
+        `update status_users_resp set active = $1 where user_resp_id = $2 and account_id = $3`,
+        [status, user_id, account_id]
+      );
+    } else {
+      await db(
+        `insert into status_users_resp (user_resp_id, account_id, active) values ($1, $2, $3)`,
+        [user_id, account_id, status]
+      );
+    }
+
+    res.status(200).json({
+      data:
+        "Status do usuário responsável atualizado com sucesso para " + status,
+    });
+  } catch (error) {
+    res
+      .status(500)
+      .json({ error: "Erro ao mudar o status do usuario responsavel" });
+  }
+});
+
 router.post("/mudarUsuarioResp", async (req: Request, res: Response) => {
   // Extrai o id do lead do formato de entrada esperado
 
-  console.dir(req.body, { depth: null });
-  const lead_info = req.body.leads.add[0]
+  const lead_info: { id: string; status_id: string; pipeline_id: string } =
+    req.body.leads.add[0];
+
+  const account_id = req.body.account.id;
 
   try {
     const cliente = await db("select nome, token from clientes where id = 28");
+    const tokenDescriptografado = descriptografarToken(cliente[0].token);
+    const subdomain = cliente[0].nome;
+    const kommoCliente = { subdomain, tokenDescriptografado };
+
+    const response = await kommoController.mudarUsuarioResp(
+      kommoCliente,
+      lead_info,
+      account_id
+    );
 
     res.status(200).json({ data: lead_info });
   } catch (error) {

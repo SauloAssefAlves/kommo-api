@@ -73,6 +73,27 @@ router.post("/buscarCpfSws/:lead_id", async (req: Request, res: Response) => {
   }
 });
 
+router.get(
+  "/statusUserResp/:user_id/:account_id",
+  async (req: Request, res: Response) => {
+    // Extrai o id do lead do formato de entrada esperado
+
+    const { user_id, account_id } = req.params;
+
+    try {
+      const status = await db(
+        `select active from status_users_resp where user_resp_id = $1 and account_id = $2`,
+        [user_id, account_id]
+      );
+      res.status(200).json({ data: { ...status[0] } });
+    } catch (error) {
+      res
+        .status(500)
+        .json({ error: "Erro ao verificar status do usuário responsável" });
+    }
+  }
+);
+
 router.post("/statusUserResp", async (req: Request, res: Response) => {
   // Extrai o id do lead do formato de entrada esperado
 
@@ -113,9 +134,13 @@ router.post("/mudarUsuarioResp", async (req: Request, res: Response) => {
     req.body.leads.add[0];
 
   const account_id = req.body.account.id;
+  const subdomain_account = req.body.account.subdomain;
 
   try {
-    const cliente = await db("select nome, token from clientes where id = 28");
+    const cliente = await db(
+      "select nome, token from clientes where nome = $1",
+      [subdomain_account]
+    );
     const tokenDescriptografado = descriptografarToken(cliente[0].token);
     const subdomain = cliente[0].nome;
     const kommoCliente = { subdomain, tokenDescriptografado };

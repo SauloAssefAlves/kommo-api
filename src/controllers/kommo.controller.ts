@@ -5,6 +5,7 @@ import axios from "axios";
 import { loginSws } from "../sws_utils/loginSws.js";
 import { searchCpf } from "../sws_utils/searchCpf.js";
 import { getTipoAdesaoPorNome } from "../sws_utils/adesaoName.js";
+import { db } from "../config/database.js";
 export class KommoController {
   public clienteModel: KommoModel;
   private status: any;
@@ -534,6 +535,11 @@ export class KommoController {
 
   public async mudarUsuarioResp(kommoCliente, lead_info, account_id) {
     const { subdomain, tokenDescriptografado } = kommoCliente;
+    const users_on = await db(
+      "select user_resp_id as id from status_users_resp where account_id = $1 and active = $2",
+      [account_id, true]
+    );
+    console.log("ID", users_on);
     this.clienteModel = KommoModel.getInstance(
       subdomain,
       tokenDescriptografado

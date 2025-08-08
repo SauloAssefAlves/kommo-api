@@ -18,7 +18,8 @@ app.use("/portais", portaisRoutes);
 app.use("/cliente", clienteRoutes);
 app.use("/kommo", kommoRoute);
 
-app.post("/teste", (req, res) => {
+app.post("/teste/:lead_id", (req, res) => {
+  console.log("Parâmetros:", req.params);
   console.log("Body:", req.body);
   console.log("Query:", req.query);
   console.log("Headers:", req.headers);

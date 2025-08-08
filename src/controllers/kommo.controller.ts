@@ -535,7 +535,6 @@ export class KommoController {
 
   public async mudarUsuarioResp(kommoCliente, lead_info, account_id) {
     const { subdomain, tokenDescriptografado } = kommoCliente;
-    let trocarUserResponsavel = false;
     this.clienteModel = KommoModel.getInstance(
       subdomain,
       tokenDescriptografado
@@ -548,104 +547,93 @@ export class KommoController {
       this.destroy();
       return { success: false, mensagem: "Lead não encontrado." };
     }
-    const taskResponse = await this.clienteModel.adicionarTask({
-      leadId: lead.id,
-      text: `Responser Lead: ${lead.name}`,
-      complete_till: Math.floor(Date.now() / 1000) + 10,
-      responsible_user_id: lead.responsible_user_id,
-    });
 
-    // Aguarda exatos 10 segundos antes de prosseguir
-    console.log("Aguardando 10 segundos...");
-    await new Promise((resolve) => setTimeout(resolve, 10000));
-    console.log("10 segundos se passaram, prosseguindo...");
+    // const users_on = await db(
+    //   "select sur.user_resp_id as id,  sur.group_id  from status_users_resp sur where active = true and group_id = (select distinct group_id from status_users_resp sur2 where sur2.user_resp_id = $1)",
+    //   [lead_info.user_id]
+    // );
 
-    const taskCheck = await this.clienteModel.getTaskById(
-      taskResponse._embedded.tasks[0].id
+    const user_on = await db(
+      "SELECT user_resp_id as id, group_id , active FROM status_users_resp WHERE user_resp_id = $1",
+      [lead_info.user_id]
     );
-    if (taskCheck.is_completed != true) {
-      console.log("❌ Tarefa não concluída");
-      trocarUserResponsavel = true;
-    } else {
-      console.log("✅ Tarefa concluída com sucesso");
+
+    if (!user_on[0].active) {
+      const body = [
+        {
+          bot_id: Number(lead_info.salesbot_id),
+          entity_id: Number(lead_info.id),
+          entity_type: "2",
+        },
+      ];
+      const responseSales = await this.clienteModel.runSalesBot(body);
+      console.log("Resposta do Sales Bot:", responseSales);
       this.destroy();
-      return;
-    }
-
-    if (trocarUserResponsavel) {
-      console.log(
-        "🔄 Iniciando processo de troca de usuário responsável...",
-        taskResponse._embedded.tasks[0].id
-      );
-
-      const users_on = await db(
-        "select user_resp_id as id from status_users_resp where account_id = $1 and active = $2 and group_id = $3",
-        [Number(account_id), true, lead.group_id]
-      );
-      console.log("ID", users_on);
-
-      const usuariosResp = await this.clienteModel.getManagersWithGroup();
-      const grupos = Object.fromEntries(
-        Object.entries(usuariosResp.groups).map(([key, value]) => [
-          key.replace(/^group_/, ""),
-          value,
-        ])
-      );
-
-      if (!lead) {
-        console.error("Lead não encontrado com o ID:", lead_info.id);
-        this.destroy();
-        return { success: false, mensagem: "Lead não encontrado." };
-      }
-
-      const usuariosRespFiltrados = Object.values(usuariosResp.managers).filter(
-        (manager: any) =>
-          manager.group === `group_${lead.group_id}` &&
-          manager.id != lead.responsible_user_id
-      );
-
-      const filteredUsers = users_on.filter((user) => {
-        return Number(lead.responsible_user_id) !== Number(user.id);
-      });
-
-      if (filteredUsers.length === 0) {
-        console.error(
-          "Nenhum usuário responsável ativo encontrado para este grupo"
-        );
-        this.destroy();
-        return {
-          success: false,
-          mensagem:
-            "Nenhum usuário responsável ativo encontrado para este grupo.",
-        };
-      }
-
-      const randomIndex = Math.floor(Math.random() * filteredUsers.length);
-      const selectedUser = filteredUsers[randomIndex];
-
+    } else {
       const response = await this.clienteModel.changeResponsibleUser(
         lead.id,
-        selectedUser.id
+        user_on[0].id
       );
-
       if (response.data) {
-        await this.clienteModel.editTask({
-          taskId: taskResponse._embedded.tasks[0].id,
-          responsible_user_id: selectedUser.id,
-        });
         await this.clienteModel.adicionarNota({
           leadId: lead.id,
-          text: `Usuário responsável alterado para: ${selectedUser.id} - ${selectedUser.name}`,
+          text: `Usuário responsável alterado!`,
           typeNote: "common",
         });
-        console.log("Aguardando 10 segundos...");
-        await new Promise((resolve) => setTimeout(resolve, 10000));
-        console.log("10 segundos se passaram, prosseguindo...");
-        
       }
-
-      return "response";
     }
+    return "response";
+
+    // const usuariosResp = await this.clienteModel.getManagersWithGroup();
+    // const grupos = Object.fromEntries(
+    //   Object.entries(usuariosResp.groups).map(([key, value]) => [
+    //     key.replace(/^group_/, ""),
+    //     value,
+    //   ])
+    // );
+
+    // if (!lead) {
+    //   console.error("Lead não encontrado com o ID:", lead_info.id);
+    //   this.destroy();
+    //   return { success: false, mensagem: "Lead não encontrado." };
+    // }
+
+    // const usuariosRespFiltrados = Object.values(usuariosResp.managers).filter(
+    //   (manager: any) =>
+    //     manager.group === `group_${users_on[0].group_id}` &&
+    //     manager.id != lead.responsible_user_id
+    // );
+    // console.log("sasassas", usuariosRespFiltrados);
+    // const filteredUsers = users_on.filter((user) => {
+    //   return Number(lead.responsible_user_id) !== Number(user.id);
+    // });
+
+    // console.log("Usuários filtrados:", filteredUsers);
+
+    // if (filteredUsers.length === 0) {
+    //   console.error(
+    //     "Nenhum usuário responsável ativo encontrado para este grupo"
+    //   );
+    //   this.destroy();
+    //   return {
+    //     success: false,
+    //     mensagem:
+    //       "Nenhum usuário responsável ativo encontrado para este grupo.",
+    //   };
+    // }
+
+    // const response = await this.clienteModel.changeResponsibleUser(
+    //   lead.id,
+    //   selectedUser.id
+    // );
+
+    // if (response.data) {
+    //   await this.clienteModel.adicionarNota({
+    //     leadId: lead.id,
+    //     text: `Usuário responsável alterado para: ${selectedUser.id} - ${selectedUser.name}`,
+    //     typeNote: "common",
+    //   });
+    // }
   }
 
   public async buscarCpfSws(

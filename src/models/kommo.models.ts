@@ -646,4 +646,35 @@ export class KommoModel {
       return null;
     }
   }
+
+  async runSalesBot(
+    body: {
+      bot_id: number;
+      entity_id: number;
+      entity_type: string;
+    }[]
+  ): Promise<any | null> {
+    try {
+      console.log("Iniciando SalesBot com os seguintes parâmetros:", body);
+
+      const response = await this.api.post(
+        `https://${this.subdomain}.kommo.com/api/v2/salesbot/run`,
+        body
+      );
+      return response.data;
+    } catch (error) {
+      if (error.response?.data?.["validation-errors"]) {
+        console.error(
+          "❌ Erro ao executar salesbot:",
+          error.response.data["validation-errors"][0].errors
+        );
+      } else {
+        console.error(
+          "❌ Erro ao executar salesbot:",
+          error.response?.data || error
+        );
+      }
+      return null;
+    }
+  }
 }

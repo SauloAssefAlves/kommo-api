@@ -97,22 +97,22 @@ router.get(
 router.post("/statusUserResp", async (req: Request, res: Response) => {
   // Extrai o id do lead do formato de entrada esperado
 
-  const { user_id, account_id, status } = req.body;
+  const { user_id, account_id, group_id, status } = req.body;
 
   try {
     const existe_user = await db(
-      `select * from status_users_resp where user_resp_id = $1 and account_id = $2`,
-      [user_id, account_id]
+      `select * from status_users_resp where user_resp_id = $1 and account_id = $2 and group_id = $3`,
+      [user_id, account_id, group_id]
     );
     if (existe_user.length > 0) {
       await db(
-        `update status_users_resp set active = $1 where user_resp_id = $2 and account_id = $3`,
-        [status, user_id, account_id]
+        `update status_users_resp set active = $1 where user_resp_id = $2 and account_id = $3 and group_id = $4`,
+        [status, user_id, account_id, group_id]
       );
     } else {
       await db(
-        `insert into status_users_resp (user_resp_id, account_id, active) values ($1, $2, $3)`,
-        [user_id, account_id, status]
+        `insert into status_users_resp (user_resp_id, account_id, group_id, active) values ($1, $2, $3, $4)`,
+        [user_id, account_id, group_id, status]
       );
     }
 
@@ -135,6 +135,7 @@ router.post("/mudarUsuarioResp", async (req: Request, res: Response) => {
 
   const account_id = req.body.account.id;
   const subdomain_account = req.body.account.subdomain;
+  console.log(account_id, subdomain_account, lead_info);
 
   try {
     const cliente = await db(
@@ -151,9 +152,9 @@ router.post("/mudarUsuarioResp", async (req: Request, res: Response) => {
       account_id
     );
 
-    res.status(200).json({ data: lead_info });
+    res.status(200).json({ data: response });
   } catch (error) {
-    res.status(500).json({ error: "Erro ao buscar CPF no SWS" });
+    res.status(500).json({ error: "Erro ao mudar usuario responsavel" });
   }
 });
 

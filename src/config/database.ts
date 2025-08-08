@@ -20,6 +20,7 @@ export const db = async (text: string, params?: any[]): Promise<any[]> => {
   const client = await pool.connect();
   try {
     const res = await client.query(text, params);
+
     return res.rows;
   } catch (err) {
     console.error("Erro na consulta ao banco:", {
@@ -182,7 +183,7 @@ export async function addMonitoramentoTintim(data: MonitoramentoTintim) {
     telefone,
     source,
     midia,
-    origem
+    origem,
   } = data;
 
   await db(

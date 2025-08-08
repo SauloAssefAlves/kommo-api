@@ -24,7 +24,7 @@ app.post("/teste", (req, res) => {
   console.log("Headers:", req.headers);
   console.log("Method:", req.method);
   console.log("URL:", req.url);
-  res.send("Inspeção feita");
+  res.status(200).json({ data: "DEU CERTO" });
 });
 
 export default app;

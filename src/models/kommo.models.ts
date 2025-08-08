@@ -304,6 +304,30 @@ export class KommoModel {
     }
   }
 
+  async getTaskById(taskId: number): Promise<any | null> {
+    try {
+      const response = await this.api.get(`/tasks/${taskId}`);
+      if (!response.data || !response.data.id) {
+        console.log("❌ Tarefa não encontrada");
+        return null;
+      }
+      return response.data;
+    } catch (error) {
+      if (error.response?.data?.["validation-errors"]) {
+        console.error(
+          "❌ Erro ao buscar tarefa por ID:",
+          error.response.data["validation-errors"][0].errors
+        );
+      } else {
+        console.error(
+          "❌ Erro ao buscar tarefa por ID:",
+          error.response?.data || error
+        );
+      }
+      return null;
+    }
+  }
+
   async adicionarTask({
     text,
     leadId,
@@ -325,13 +349,12 @@ export class KommoModel {
           entity_type: "leads",
           complete_till: complete_till,
           result: { text: result_text },
-          is_completed: true,
           responsible_user_id,
         },
       ];
       const response = await this.api.post(`/tasks`, taskData);
 
-      // return response.data;
+      return response.data;
     } catch (error) {
       if (error.response?.data?.["validation-errors"]) {
         console.error(
@@ -347,6 +370,40 @@ export class KommoModel {
       return;
     }
   }
+
+  async editTask({
+    taskId,
+    text,
+    responsible_user_id,
+    complete_till = Math.floor(Date.now() / 1000),
+  }: {
+    taskId: number;
+    responsible_user_id?: number;
+    text?: string;
+    complete_till?: number;
+  }): Promise<any | null> {
+    try {
+      const taskData = {
+        text,
+        responsible_user_id,
+        complete_till: complete_till,
+      };
+      const response = await this.api.patch(`/tasks/${taskId}`, taskData);
+
+      return response.data;
+    } catch (error) {
+      if (error.response?.data?.["validation-errors"]) {
+        console.error(
+          "❌ Erro ao editar task:",
+          error.response.data["validation-errors"][0].errors
+        );
+      } else {
+        console.error("❌ Erro ao editar task:", error.response?.data || error);
+      }
+      return null;
+    }
+  }
+
   async adicionarNota({
     leadId,
     text,
@@ -566,5 +623,27 @@ export class KommoModel {
 
     const data = await response.json();
     return data;
+  }
+
+  async changeResponsibleUser(leadId: number, userId: number) {
+    try {
+      const response = await this.api.patch(`/leads/${leadId}`, {
+        responsible_user_id: userId,
+      });
+      return response.data;
+    } catch (error) {
+      if (error.response?.data?.["validation-errors"]) {
+        console.error(
+          "❌ Erro ao mudar usuario responsavel:",
+          error.response.data["validation-errors"][0].errors
+        );
+      } else {
+        console.error(
+          "❌ Erro ao mudar usuario responsavel:",
+          error.response?.data || error
+        );
+      }
+      return null;
+    }
   }
 }

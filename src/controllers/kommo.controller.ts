@@ -535,38 +535,117 @@ export class KommoController {
 
   public async mudarUsuarioResp(kommoCliente, lead_info, account_id) {
     const { subdomain, tokenDescriptografado } = kommoCliente;
-    const users_on = await db(
-      "select user_resp_id as id from status_users_resp where account_id = $1 and active = $2",
-      [account_id, true]
-    );
-    console.log("ID", users_on);
+    let trocarUserResponsavel = false;
     this.clienteModel = KommoModel.getInstance(
       subdomain,
       tokenDescriptografado
     );
-    const usuariosResp = await this.clienteModel.getManagersWithGroup();
-    const grupos = Object.fromEntries(
-      Object.entries(usuariosResp.groups).map(([key, value]) => [
-        key.replace(/^group_/, ""),
-        value,
-      ])
-    );
-
     const lead = await this.clienteModel.buscarLeadPorId(lead_info.id);
+    console.log(lead.group_id);
+
     if (!lead) {
       console.error("Lead não encontrado com o ID:", lead_info.id);
       this.destroy();
       return { success: false, mensagem: "Lead não encontrado." };
     }
+    const taskResponse = await this.clienteModel.adicionarTask({
+      leadId: lead.id,
+      text: `Responser Lead: ${lead.name}`,
+      complete_till: Math.floor(Date.now() / 1000) + 10,
+      responsible_user_id: lead.responsible_user_id,
+    });
 
-    const usuariosRespFiltrados = Object.values(usuariosResp.managers).filter(
-      (manager: any) =>
-        manager.group === `group_${lead.group_id}` &&
-        manager.id != lead.responsible_user_id
+    // Aguarda exatos 10 segundos antes de prosseguir
+    console.log("Aguardando 10 segundos...");
+    await new Promise((resolve) => setTimeout(resolve, 10000));
+    console.log("10 segundos se passaram, prosseguindo...");
+
+    const taskCheck = await this.clienteModel.getTaskById(
+      taskResponse._embedded.tasks[0].id
     );
+    if (taskCheck.is_completed != true) {
+      console.log("❌ Tarefa não concluída");
+      trocarUserResponsavel = true;
+    } else {
+      console.log("✅ Tarefa concluída com sucesso");
+      this.destroy();
+      return;
+    }
 
-    console.log(usuariosRespFiltrados);
-    return "response";
+    if (trocarUserResponsavel) {
+      console.log(
+        "🔄 Iniciando processo de troca de usuário responsável...",
+        taskResponse._embedded.tasks[0].id
+      );
+
+      const users_on = await db(
+        "select user_resp_id as id from status_users_resp where account_id = $1 and active = $2 and group_id = $3",
+        [Number(account_id), true, lead.group_id]
+      );
+      console.log("ID", users_on);
+
+      const usuariosResp = await this.clienteModel.getManagersWithGroup();
+      const grupos = Object.fromEntries(
+        Object.entries(usuariosResp.groups).map(([key, value]) => [
+          key.replace(/^group_/, ""),
+          value,
+        ])
+      );
+
+      if (!lead) {
+        console.error("Lead não encontrado com o ID:", lead_info.id);
+        this.destroy();
+        return { success: false, mensagem: "Lead não encontrado." };
+      }
+
+      const usuariosRespFiltrados = Object.values(usuariosResp.managers).filter(
+        (manager: any) =>
+          manager.group === `group_${lead.group_id}` &&
+          manager.id != lead.responsible_user_id
+      );
+
+      const filteredUsers = users_on.filter((user) => {
+        return Number(lead.responsible_user_id) !== Number(user.id);
+      });
+
+      if (filteredUsers.length === 0) {
+        console.error(
+          "Nenhum usuário responsável ativo encontrado para este grupo"
+        );
+        this.destroy();
+        return {
+          success: false,
+          mensagem:
+            "Nenhum usuário responsável ativo encontrado para este grupo.",
+        };
+      }
+
+      const randomIndex = Math.floor(Math.random() * filteredUsers.length);
+      const selectedUser = filteredUsers[randomIndex];
+
+      const response = await this.clienteModel.changeResponsibleUser(
+        lead.id,
+        selectedUser.id
+      );
+
+      if (response.data) {
+        await this.clienteModel.editTask({
+          taskId: taskResponse._embedded.tasks[0].id,
+          responsible_user_id: selectedUser.id,
+        });
+        await this.clienteModel.adicionarNota({
+          leadId: lead.id,
+          text: `Usuário responsável alterado para: ${selectedUser.id} - ${selectedUser.name}`,
+          typeNote: "common",
+        });
+        console.log("Aguardando 10 segundos...");
+        await new Promise((resolve) => setTimeout(resolve, 10000));
+        console.log("10 segundos se passaram, prosseguindo...");
+        
+      }
+
+      return "response";
+    }
   }
 
   public async buscarCpfSws(

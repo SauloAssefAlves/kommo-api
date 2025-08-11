@@ -657,12 +657,13 @@ export class KommoModel {
         userId,
       });
 
-      contacts.forEach(async (contact) => {
-        await this.api.patch(`/contacts`, {
-          id: contact.id,
-          responsible_user_id: userId,
-        });
-      });
+      await Promise.all(
+        contacts.map(async (contact) => {
+          await this.api.patch(`/contacts/${contact.id}`, {
+            responsible_user_id: userId,
+          });
+        })
+      );
     } catch (error) {
       if (error.response?.data?.["validation-errors"]) {
         console.error(

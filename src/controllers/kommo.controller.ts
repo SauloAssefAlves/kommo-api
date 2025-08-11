@@ -574,6 +574,10 @@ export class KommoController {
         lead.id,
         user_on[0].id
       );
+       await this.clienteModel.changeResponsibleUserContact(
+        lead._embedded.contacts,
+        user_on[0].id
+      );
       if (response.data) {
         await this.clienteModel.adicionarNota({
           leadId: lead.id,

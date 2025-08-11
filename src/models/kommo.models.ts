@@ -647,6 +647,38 @@ export class KommoModel {
     }
   }
 
+  async changeResponsibleUserContact(
+    contacts: { id: number }[],
+    userId: number
+  ) {
+    try {
+      console.log("🔄 Mudando usuário responsável do contato:", {
+        contacts,
+        userId,
+      });
+
+      contacts.forEach(async (contact) => {
+        await this.api.patch(`/contacts`, {
+          id: contact.id,
+          responsible_user_id: userId,
+        });
+      });
+    } catch (error) {
+      if (error.response?.data?.["validation-errors"]) {
+        console.error(
+          "❌ Erro ao mudar usuario responsavel do contato:",
+          error.response.data["validation-errors"][0].errors
+        );
+      } else {
+        console.error(
+          "❌ Erro ao mudar usuario responsavel do contato:",
+          error.response?.data || error
+        );
+      }
+      return null;
+    }
+  }
+
   async runSalesBot(
     body: {
       bot_id: number;

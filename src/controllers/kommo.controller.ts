@@ -540,7 +540,6 @@ export class KommoController {
       tokenDescriptografado
     );
     const lead = await this.clienteModel.buscarLeadPorId(lead_info.id);
-    console.log(lead.group_id);
 
     if (!lead) {
       console.error("Lead não encontrado com o ID:", lead_info.id);
@@ -558,7 +557,7 @@ export class KommoController {
       [lead_info.user_id]
     );
 
-    if (!user_on[0].active) {
+    if (!user_on || user_on.length === 0 || !user_on[0].active) {
       const body = [
         {
           bot_id: Number(lead_info.salesbot_id),
@@ -568,13 +567,14 @@ export class KommoController {
       ];
       const responseSales = await this.clienteModel.runSalesBot(body);
       console.log("Resposta do Sales Bot:", responseSales);
-      this.destroy();
+      // Remove destroy() aqui para permitir que o Sales Bot continue rodando
+      // this.destroy();
     } else {
       const response = await this.clienteModel.changeResponsibleUser(
         lead.id,
         user_on[0].id
       );
-       await this.clienteModel.changeResponsibleUserContact(
+      await this.clienteModel.changeResponsibleUserContact(
         lead._embedded.contacts,
         user_on[0].id
       );
@@ -586,6 +586,8 @@ export class KommoController {
         });
       }
     }
+    this.destroy();
+
     return "response";
 
     // const usuariosResp = await this.clienteModel.getManagersWithGroup();

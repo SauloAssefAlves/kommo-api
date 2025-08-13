@@ -130,7 +130,7 @@ router.post("/statusUserResp", async (req: Request, res: Response) => {
 router.post("/mudarUsuarioResp", async (req: Request, res: Response) => {
   // Extrai o id do lead do formato de entrada esperado
   console.log("Query params:", req.query);
-  const { user_id, salesbot_id } = req.query;
+  const { user_id, salesbot_id, group_id } = req.query;
 
   if (Object.keys(req.query).length === 0) {
     res.status(400).json({ error: "Query parameters são obrigatórios" });
@@ -141,6 +141,7 @@ router.post("/mudarUsuarioResp", async (req: Request, res: Response) => {
     ...req.body.leads.add[0],
     user_id: user_id as string,
     salesbot_id: salesbot_id as string,
+    group_id: group_id as string,
   };
   const account_id = req.body.account.id;
   const subdomain_account = req.body.account.subdomain;

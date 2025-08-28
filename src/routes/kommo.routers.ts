@@ -3,6 +3,7 @@ import { KommoController } from "../controllers/kommo.controller.js";
 import { authenticateToken } from "../auth/middleware.js";
 import { db, descriptografarToken } from "../config/database.js";
 import { mockData } from "../utils/mocks.js";
+import { KommoModel } from "../models/kommo.models.js";
 const router = Router();
 const kommoController = new KommoController();
 
@@ -36,9 +37,9 @@ router.post("/cadastrarPipelines/:id", async (req: Request, res: Response) => {
   // const tokenDescriptografado = descriptografarToken(cliente[0].token);
   // const subdomain = cliente[0].nome;
   // console.log("Token descriptografado:", tokenDescriptografado);
-  const subdomain = "worldcarfortaleza";
+  const subdomain = "routecar";
   const tokenDescriptografado =
-    "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsImp0aSI6ImVlOTVjN2Y1OGE3MmEwMDViY2U2YzczZDVlNTc2MjdiMWEwOWYyNGVhODBlYTUxZTg4YWZmN2U1ZDc1OGUzNDBjNGQ0ZTA5ODIwOGM5YTlkIn0.eyJhdWQiOiIwYmEyYTRmMS0xMmZmLTQ1OTctOTgxOC1kNDE4NDRhMzJhODkiLCJqdGkiOiJlZTk1YzdmNThhNzJhMDA1YmNlNmM3M2Q1ZTU3NjI3YjFhMDlmMjRlYTgwZWE1MWU4OGFmZjdlNWQ3NThlMzQwYzRkNGUwOTgyMDhjOWE5ZCIsImlhdCI6MTc1MjAwMjQ1NywibmJmIjoxNzUyMDAyNDU3LCJleHAiOjE4MzY4NjQwMDAsInN1YiI6IjEwMjgxNTk5IiwiZ3JhbnRfdHlwZSI6IiIsImFjY291bnRfaWQiOjM0ODUzNTg3LCJiYXNlX2RvbWFpbiI6ImtvbW1vLmNvbSIsInZlcnNpb24iOjIsInNjb3BlcyI6WyJjcm0iLCJmaWxlcyIsImZpbGVzX2RlbGV0ZSIsIm5vdGlmaWNhdGlvbnMiLCJwdXNoX25vdGlmaWNhdGlvbnMiXSwiaGFzaF91dWlkIjoiZGRkNjFlNDgtY2QwNy00YmI0LTk4Y2YtYWEyNzEyOThhODYzIiwiYXBpX2RvbWFpbiI6ImFwaS1jLmtvbW1vLmNvbSJ9.P5dE9eJdw4cY9vyych9TDqeDL49wUXjiamApV9RvNmenlaRxNYlL4OVLN3F_tKOZToKww7Cd5Y_L4EGLYwXEsgtu1R9TyS88tEVL_egerGeVFxyJuFKjwiQwJs4CHDmizlPs9JhDySZIfN0iEa3LLcilG0UlVDqSMzF3A15KDnAZJkK2F53ldoHj4M2ZOqr5voxz9u4kWa7M5Ux4_j2r9px5gKdQGtuBLicEbngYZnBv1-RDRD35-2oFcAix1Vij-GKmweXvo220Viafmzo-fIhwQ9vg5FU-mUwaNE5jWK_jfu4L1aojVYPRhurjAS30kRD4DYt20ekvFno4Qtlv9g";
+    "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsImp0aSI6ImJlZTg4NDU3ZDE4ODlmZmU2NjQyZjk0Y2M5YjIyMjg1MjkyNTFhYTk2ODcyNzdhOGY5N2M0MmExNmI0YjkxYTIwYzQ2YTQ2YmY2NTQ0OWQ2In0.eyJhdWQiOiI0MTk1NzhkMy0zOTQ3LTRlN2YtYWNhNC1hNjI4YjQ1ZmRmZTUiLCJqdGkiOiJiZWU4ODQ1N2QxODg5ZmZlNjY0MmY5NGNjOWIyMjI4NTI5MjUxYWE5Njg3Mjc3YThmOTdjNDJhMTZiNGI5MWEyMGM0NmE0NmJmNjU0NDlkNiIsImlhdCI6MTc1NjIzMTcwNiwibmJmIjoxNzU2MjMxNzA2LCJleHAiOjE4MTI2NzIwMDAsInN1YiI6IjEwMjgxNTk5IiwiZ3JhbnRfdHlwZSI6IiIsImFjY291bnRfaWQiOjM1MDgwNDIwLCJiYXNlX2RvbWFpbiI6ImtvbW1vLmNvbSIsInZlcnNpb24iOjIsInNjb3BlcyI6WyJjcm0iLCJmaWxlcyIsImZpbGVzX2RlbGV0ZSIsIm5vdGlmaWNhdGlvbnMiLCJwdXNoX25vdGlmaWNhdGlvbnMiXSwidXNlcl9mbGFncyI6MSwiaGFzaF91dWlkIjoiMDQ1NzU0MGItZjIxYS00YzU2LWI4NTAtODA2Yzk2MTViMGQ2IiwiYXBpX2RvbWFpbiI6ImFwaS1jLmtvbW1vLmNvbSJ9.f44Xzo_3WaB4gT9RS5YpLgDuBRyO28RRU3v7hOfgWoRciXbMAcImRQtBolYDGB2ImJz8G6MiYef9ARp4TZXkL6Ekwrdpjt7v9rBqqk3-2br4_q1LMX9DVQTK5xDfd-C5G8gTa7xGm13cLCckQiPnDOks_f62Ozg6D6N691akhmniSNvi3ubFGcLppzKop8Y95R1gxy1XpzWQ_HNOlTAjcOoRFYJykPTj-tTweYjrN5fusSLROQFmQ4O_hgKv57VFtxLrsElQq53ChOsKslhEnvYpe1tVBvo9aWA4qAFYoEoncWDUlQ4ywR1U3qvyQbrpJpN4Xk3li2dG695g_eGC7A";
   const response = await kommoController.cadastrarPipelines(
     subdomain as string,
     tokenDescriptografado as string
@@ -109,6 +110,64 @@ router.post("/statusUserResp", async (req: Request, res: Response) => {
         `update status_users_resp set active = $1 where user_resp_id = $2 and account_id = $3 and group_id = $4`,
         [status, user_id, account_id, group_id]
       );
+      if (status) {
+        //temporario----
+        // const nome = "fortalezaec";
+        const nome = "evoresultdev";
+
+        // Se o status for ativo, verificar se há leads na fila de espera para esse grupo e iniciar o Sales Bot
+        console.log("Verificando leads na fila de espera...");
+        const client = await db(
+          "select nome, token from clientes where nome = $1",
+          [nome]
+        );
+        const tokenDescriptografado = descriptografarToken(client[0].token);
+        const subdomain = client[0].nome;
+        const kommoCliente = { subdomain, tokenDescriptografado };
+        // kommoController instance is already defined above, no need to reassign or use 'this'
+        const clienteModel = KommoModel.getInstance(
+          subdomain,
+          tokenDescriptografado
+        );
+
+        const leads_waiting = await db(
+          `select id_lead, salesbot_id from leads_waiting where group_user_resp_id = $1 and account_id = $2`,
+          [group_id, account_id]
+        );
+
+        console.log("Leads na fila de espera:", leads_waiting);
+        for (const lead of leads_waiting) {
+          const salesbot_id = lead.salesbot_id;
+          const body = [
+            {
+              bot_id: Number(lead.salesbot_id),
+              entity_id: Number(lead.id_lead),
+              entity_type: "2",
+            },
+          ];
+          console.log("Iniciando Sales Bot para o lead:", body);
+          try {
+            const responseSales = await clienteModel.runSalesBot(body);
+            console.log("Resposta do Sales Bot:", responseSales);
+
+            if (responseSales.success) {
+              await db(`delete from leads_waiting where id_lead = $1`, [
+                lead.id_lead,
+              ]);
+              console.log(
+                `Lead ${lead.id_lead} removido da fila de espera após atribuição.`
+              );
+            }
+          } catch (error) {
+            console.error(
+              `Erro ao iniciar Sales Bot para o lead ${lead.id_lead}:`,
+              error
+            );
+          } finally {
+            clienteModel.destroy();
+          }
+        }
+      }
     } else {
       await db(
         `insert into status_users_resp (user_resp_id, account_id, group_id, active) values ($1, $2, $3, $4)`,
@@ -132,6 +191,8 @@ router.post("/mudarUsuarioResp", async (req: Request, res: Response) => {
   console.log("Query params:", req.query);
   const { user_id, salesbot_id, group_id } = req.query;
 
+  const last = req.query.last as string | undefined;
+
   if (Object.keys(req.query).length === 0) {
     res.status(400).json({ error: "Query parameters são obrigatórios" });
     return;
@@ -142,6 +203,7 @@ router.post("/mudarUsuarioResp", async (req: Request, res: Response) => {
     user_id: user_id as string,
     salesbot_id: salesbot_id as string,
     group_id: group_id as string,
+    last: last === "true",
   };
   const account_id = req.body.account.id;
   const subdomain_account = req.body.account.subdomain;
@@ -162,7 +224,7 @@ router.post("/mudarUsuarioResp", async (req: Request, res: Response) => {
       account_id
     );
 
-    res.status(200).json({ data: "response" });
+    res.status(200).json({ data: response });
   } catch (error) {
     res.status(500).json({ error: "Erro ao mudar usuario responsavel" });
   }

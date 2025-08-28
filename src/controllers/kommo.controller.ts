@@ -535,111 +535,94 @@ export class KommoController {
 
   public async mudarUsuarioResp(kommoCliente, lead_info, account_id) {
     const { subdomain, tokenDescriptografado } = kommoCliente;
-    this.clienteModel = KommoModel.getInstance(
-      subdomain,
-      tokenDescriptografado
-    );
-    const lead = await this.clienteModel.buscarLeadPorId(lead_info.id);
 
-    if (!lead) {
-      console.error("Lead não encontrado com o ID:", lead_info.id);
-      this.destroy();
-      return { success: false, mensagem: "Lead não encontrado." };
-    }
-
-    // const users_on = await db(
-    //   "select sur.user_resp_id as id,  sur.group_id  from status_users_resp sur where active = true and group_id = (select distinct group_id from status_users_resp sur2 where sur2.user_resp_id = $1)",
-    //   [lead_info.user_id]
-    // );
-
-    const user_on = await db(
-      "SELECT user_resp_id as id, group_id , active FROM status_users_resp WHERE user_resp_id = $1",
-      [lead_info.user_id]
-    );
-
-    if (!user_on || user_on.length === 0 || !user_on[0].active) {
-      const body = [
-        {
-          bot_id: Number(lead_info.salesbot_id),
-          entity_id: Number(lead_info.id),
-          entity_type: "2",
-        },
-      ];
-      const responseSales = await this.clienteModel.runSalesBot(body);
-      console.log("Resposta do Sales Bot:", responseSales);
-      // Remove destroy() aqui para permitir que o Sales Bot continue rodando
-      // this.destroy();
-    } else {
-      const response = await this.clienteModel.changeResponsibleUser(
-        lead.id,
-        user_on[0].id
+    try {
+      this.clienteModel = KommoModel.getInstance(
+        subdomain,
+        tokenDescriptografado
       );
-      await this.clienteModel.changeResponsibleUserContact(
-        lead._embedded.contacts,
-        user_on[0].id
-      );
-      if (response.data) {
-        await this.clienteModel.adicionarNota({
-          leadId: lead.id,
-          text: `Usuário responsável alterado!`,
-          typeNote: "common",
-        });
+      const lead = await this.clienteModel.buscarLeadPorId(lead_info.id);
+
+      if (!lead) {
+        console.error("Lead não encontrado com o ID:", lead_info.id);
+        this.destroy();
+        return { success: false, mensagem: "Lead não encontrado." };
       }
+
+      const user_on = await db(
+        "SELECT user_resp_id as id, group_id , active FROM status_users_resp WHERE user_resp_id = $1 AND group_id = $2 AND account_id = $3",
+        [lead_info.user_id, lead_info.group_id, account_id]
+      );
+      console.log("USERS", user_on);
+
+      if (!user_on || user_on.length === 0 || !user_on[0].active) {
+        const body = [
+          {
+            bot_id: Number(lead_info.salesbot_id),
+            entity_id: Number(lead_info.id),
+            entity_type: "2",
+          },
+        ];
+        //body id: lead_info.id, id_lead: lead.id, group_user_resp_id: lead_info.group_id, account_id: account_id,
+        if (lead_info.last) {
+          await db(
+            `INSERT INTO leads_waiting (id_lead, group_user_resp_id, account_id, salesbot_id) VALUES ($1, $2, $3, $4)`,
+            [lead.id, lead_info.group_id, account_id, lead_info.salesbot_id]
+          );
+          console.log("Lead adicionado à fila de espera:", {
+            id_lead: lead.id,
+            group_user_resp_id: lead_info.group_id,
+            account_id: account_id,
+          });
+          return;
+        }
+
+        const responseSales = await this.clienteModel.runSalesBot(body);
+        console.log("Resposta do Sales Bot:", responseSales);
+      } else {
+        try {
+          const response = await this.clienteModel.changeResponsibleUser(
+            lead.id,
+            user_on[0].id
+          );
+          await this.clienteModel.changeResponsibleUserContact(
+            lead._embedded.contacts,
+            user_on[0].id
+          );
+          const body = [
+            {
+              bot_id: 42206,
+              entity_id: Number(lead.id),
+              entity_type: "2",
+            },
+          ];
+          await this.clienteModel.runSalesBot(body);
+          if (response.data) {
+            await this.clienteModel.adicionarNota({
+              leadId: lead.id,
+              text: `Usuário responsável alterado!`,
+              typeNote: "common",
+            });
+          }
+        } catch {
+          console.log("OCORREU UM ERRO NA ALTERAÇÃO DO USUÁRIO RESPONSÁVEL");
+          return {
+            success: false,
+            mensagem: "Erro ao mudar usuário responsável 1.",
+          };
+        }
+      }
+    } catch {
+      console.log("Erro ao mudar usuário responsável:", lead_info.id);
+      return {
+        success: false,
+        mensagem: "Erro ao mudar usuário responsável. 2",
+      };
+    } finally {
+      this.destroy();
     }
-    this.destroy();
 
     return "response";
-
-    // const usuariosResp = await this.clienteModel.getManagersWithGroup();
-    // const grupos = Object.fromEntries(
-    //   Object.entries(usuariosResp.groups).map(([key, value]) => [
-    //     key.replace(/^group_/, ""),
-    //     value,
-    //   ])
-    // );
-
-    // if (!lead) {
-    //   console.error("Lead não encontrado com o ID:", lead_info.id);
-    //   this.destroy();
-    //   return { success: false, mensagem: "Lead não encontrado." };
-    // }
-
-    // const usuariosRespFiltrados = Object.values(usuariosResp.managers).filter(
-    //   (manager: any) =>
-    //     manager.group === `group_${users_on[0].group_id}` &&
-    //     manager.id != lead.responsible_user_id
-    // );
-    // console.log("sasassas", usuariosRespFiltrados);
-    // const filteredUsers = users_on.filter((user) => {
-    //   return Number(lead.responsible_user_id) !== Number(user.id);
-    // });
-
-    // console.log("Usuários filtrados:", filteredUsers);
-
-    // if (filteredUsers.length === 0) {
-    //   console.error(
-    //     "Nenhum usuário responsável ativo encontrado para este grupo"
-    //   );
-    //   this.destroy();
-    //   return {
-    //     success: false,
-    //     mensagem:
-    //       "Nenhum usuário responsável ativo encontrado para este grupo.",
-    //   };
-    // }
-
-    // const response = await this.clienteModel.changeResponsibleUser(
-    //   lead.id,
-    //   selectedUser.id
-    // );
-
-    // if (response.data) {
-    //   await this.clienteModel.adicionarNota({
-    //     leadId: lead.id,
-    //     text: `Usuário responsável alterado para: ${selectedUser.id} - ${selectedUser.name}`,
-    //     typeNote: "common",
-    //   });
-    // }
   }
 
   public async buscarCpfSws(

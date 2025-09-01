@@ -563,8 +563,13 @@ export class KommoController {
           lead_info.last
         );
 
+        const someone_on = await db(
+          "SELECT user_resp_id as id, group_id , active FROM status_users_resp WHERE group_id = $1 AND account_id = $2 AND active = true",
+          [lead_info.group_id, account_id]
+        );
+
         //body id: lead_info.id, id_lead: lead.id, group_user_resp_id: lead_info.group_id, account_id: account_id,
-        if (lead_info.last) {
+        if (someone_on.length === 0 && lead_info.last) {
           await db(
             `INSERT INTO leads_waiting (id_lead, group_user_resp_id, account_id, salesbot_id) VALUES ($1, $2, $3, $4)`,
             [lead.id, lead_info.group_id, account_id, lead_info.salesbot_id]

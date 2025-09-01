@@ -600,14 +600,7 @@ export class KommoController {
             lead._embedded.contacts,
             user_on[0].id
           );
-          const body = [
-            {
-              bot_id: Number(lead_info.salesbot_id),
-              entity_id: Number(lead.id),
-              entity_type: "2",
-            },
-          ];
-          await this.clienteModel.runSalesBot(body);
+       
           if (response.data) {
             await this.clienteModel.adicionarNota({
               leadId: lead.id,

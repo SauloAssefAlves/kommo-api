@@ -556,6 +556,12 @@ export class KommoController {
       console.log("USERS", user_on);
 
       if (!user_on || user_on.length === 0 || !user_on[0].active) {
+        console.log(
+          "USUARIO NÃO ENCONTRADO OU INATIVO | ID : ",
+          lead_info.user_id,
+          " LAST? ",
+          lead_info.last
+        );
         const body = [
           {
             bot_id: Number(lead_info.salesbot_id),
@@ -564,7 +570,7 @@ export class KommoController {
           },
         ];
         //body id: lead_info.id, id_lead: lead.id, group_user_resp_id: lead_info.group_id, account_id: account_id,
-        if (lead_info.last == "true") {
+        if (lead_info.last) {
           await db(
             `INSERT INTO leads_waiting (id_lead, group_user_resp_id, account_id, salesbot_id) VALUES ($1, $2, $3, $4)`,
             [lead.id, lead_info.group_id, account_id, lead_info.salesbot_id]
@@ -574,11 +580,10 @@ export class KommoController {
             group_user_resp_id: lead_info.group_id,
             account_id: account_id,
           });
-          return;
+        } else {
+          const responseSales = await this.clienteModel.runSalesBot(body);
+          console.log("Resposta do Sales Bot:", responseSales);
         }
-
-        const responseSales = await this.clienteModel.runSalesBot(body);
-        console.log("Resposta do Sales Bot:", responseSales);
       } else {
         try {
           const response = await this.clienteModel.changeResponsibleUser(

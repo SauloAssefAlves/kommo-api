@@ -330,4 +330,40 @@ router.post("/cadastrarLeadVox2you", async (req: Request, res: Response) => {
     res.status(500).json({ error: "Erro ao cadastrar lead no Vox2You" });
   }
 });
+
+router.post("/bloqueio-informacao/cadastrar-usuario", async (req: Request, res: Response) => {
+  console.log("[Bloquear-Informações.cadastrar-usuario] req.body:", req.body);
+  const { fields } = req.body;
+
+  try {
+    const response = await kommoController.cadastrarUsuarioAcesso(fields);
+    res.status(200).json({ data: response })
+  } catch (error) {
+    res.status(500).json({ error: "Erro ao cadastrar acesso do Usuário" });
+  }
+});
+
+router.post("/bloqueio-informacao/cadastrar-acesso", async (req: Request, res: Response) => {
+  console.log("[Bloquear-Informações.cadastrar-acesso] req.body:", req.body);
+  const { fields } = req.body;
+
+  try {
+    const response = await kommoController.cadastrarTelasUsuarioAcesso(fields);
+    res.status(200).json({ data: response })
+  } catch (error) {
+    res.status(500).json({ error: "Erro ao cadastrar acesso do Usuário" });
+  }
+});
+
+// GET /bloqueio-informacao/listar-acessos
+router.get("/bloqueio-informacao/listar-acessos", async (req: Request, res: Response) => {
+  try {
+    const data = await kommoController.listarAcessos();
+    res.status(200).json({ data });
+  } catch (error) {
+    console.error("[Bloquear-Informações.listar-acessos] erro:", error);
+    res.status(500).json({ error: "Erro ao listar acessos dos usuários" });
+  }
+});
+
 export default router;

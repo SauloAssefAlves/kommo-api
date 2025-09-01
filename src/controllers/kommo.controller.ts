@@ -885,4 +885,85 @@ export class KommoController {
       throw error;
     }
   }
+
+  public async cadastrarUsuarioAcesso(data: any) {
+    const fields = data;
+    try {
+      const user = await db(
+        `SELECT * FROM usuario WHERE (USR_Email = $1)`,
+        [fields.user_email]
+      );
+      
+      if (user) {
+        await db(
+          `UPDATE usuario SET USR_Nome = $2, USR_Email = $3, USR_Senha = $4, USR_Domain = $5 WHERE USR_Email = $2`,
+          [fields.user_name, fields.user_email, fields.password, fields.domain]
+  );
+      }
+      else {
+        await db(
+          `INSERT INTO usuario (USR_Nome, USR_Email, USR_Senha, USR_Domain) VALUES ($1, $2, $3, $4)`,
+          [fields.user_name, fields.user_email, fields.password, fields.domain]
+        );
+      }
+      return;
+    } catch (error) {
+      console.log("Erro ao cadastrar acesso do usuário:", error)
+    }
+  }
+
+  public async cadastrarTelasUsuarioAcesso(
+    data: { user_email: string; telas?: string[];}
+  ) {
+    const userEmail = data.user_email;
+    const telas = (Array.isArray(data.telas) ? data.telas : []).map(t => String(t).trim()).filter(Boolean);
+
+    try {
+      await db(
+        `DELETE FROM usuario_acesso ua USING usuario u WHERE u.USR_Email = $1 AND ua.USRA_UsuarioId = u.USR_Id`,
+        [userEmail]
+      );
+
+      if (telas.length) {
+        const values = telas.map((_, i) => `($${i + 2})`).join(',');
+        const params = [userEmail, ...telas];
+        await db(
+          `INSERT INTO usuario_acesso (USRA_UsuarioId, USRA_Tela)
+           SELECT u.USR_Id, v.tela FROM usuario u JOIN (VALUES ${values}) AS v(tela) ON TRUE
+           WHERE u.USR_Email = $1`,
+           params
+        );
+      }
+      return { ok: true };
+    } catch (error) {
+      console.log('Erro ao cadastrar acesso do usuário:', error);
+      throw error;
+    }
+  }
+
+  public async listarAcessos(): Promise<Array<{ user_name: string; user_email: string; telas: string[] }>> {
+    const rows = await db(
+      `
+      SELECT
+        u.USR_Nome  AS user_name,
+        u.USR_Email AS user_email,
+        COALESCE(
+          ARRAY_REMOVE(ARRAY_AGG(DISTINCT ua.USRA_Tela), NULL),
+          '{}'
+        ) AS telas
+      FROM usuario u
+      LEFT JOIN usuario_acesso ua
+            ON ua.USRA_UsuarioId = u.USR_Id
+      GROUP BY u.USR_Nome, u.USR_Email
+      ORDER BY LOWER(u.USR_Nome)
+      `,
+      []
+    );
+
+    return (rows || []).map((r: any) => ({
+      user_name: r.user_name,
+      user_email: r.user_email,
+      telas: Array.isArray(r.telas) ? r.telas : []
+    }));
+  }
 }

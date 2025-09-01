@@ -602,7 +602,7 @@ export class KommoController {
           );
           const body = [
             {
-              bot_id: 42206,
+              bot_id: Number(lead_info.salesbot_id),
               entity_id: Number(lead.id),
               entity_type: "2",
             },

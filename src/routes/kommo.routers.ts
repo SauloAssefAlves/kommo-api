@@ -136,6 +136,11 @@ router.post("/statusUserResp", async (req: Request, res: Response) => {
         );
 
         console.log("Leads na fila de espera:", leads_waiting);
+        if (leads_waiting.length === 0) {
+          console.log("Nenhum lead na fila de espera.");
+          clienteModel.destroy();
+          return;
+        }
         for (const lead of leads_waiting) {
           const salesbot_id = lead.salesbot_id;
           const body = [
@@ -163,10 +168,9 @@ router.post("/statusUserResp", async (req: Request, res: Response) => {
               `Erro ao iniciar Sales Bot para o lead ${lead.id_lead}:`,
               error
             );
-          } finally {
-            clienteModel.destroy();
           }
         }
+        clienteModel.destroy();
       }
     } else {
       await db(

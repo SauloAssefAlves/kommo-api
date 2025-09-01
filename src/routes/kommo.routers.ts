@@ -112,8 +112,8 @@ router.post("/statusUserResp", async (req: Request, res: Response) => {
       );
       if (status) {
         //temporario----
-        // const nome = "fortalezaec";
-        const nome = "evoresultdev";
+        const nome = "fortalezaec";
+        // const nome = "evoresultdev";
 
         // Se o status for ativo, verificar se há leads na fila de espera para esse grupo e iniciar o Sales Bot
         console.log("Verificando leads na fila de espera...");

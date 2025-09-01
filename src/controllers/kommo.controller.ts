@@ -562,13 +562,7 @@ export class KommoController {
           " LAST? ",
           lead_info.last
         );
-        const body = [
-          {
-            bot_id: Number(lead_info.salesbot_id),
-            entity_id: Number(lead_info.id),
-            entity_type: "2",
-          },
-        ];
+
         //body id: lead_info.id, id_lead: lead.id, group_user_resp_id: lead_info.group_id, account_id: account_id,
         if (lead_info.last) {
           await db(
@@ -581,6 +575,13 @@ export class KommoController {
             account_id: account_id,
           });
         } else {
+          const body = [
+            {
+              bot_id: Number(lead_info.salesbot_id),
+              entity_id: Number(lead_info.id),
+              entity_type: "2",
+            },
+          ];
           const responseSales = await this.clienteModel.runSalesBot(body);
           console.log("Resposta do Sales Bot:", responseSales);
         }

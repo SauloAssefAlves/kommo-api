@@ -894,7 +894,7 @@ export class KommoController {
         [fields.user_email]
       );
       
-      if (user) {
+      if (user.length > 0) {
         await db(
           `UPDATE usuario SET USR_Nome = $2, USR_Email = $3, USR_Senha = $4, USR_Domain = $5 WHERE USR_Email = $2`,
           [fields.user_name, fields.user_email, fields.password, fields.domain]
@@ -906,9 +906,10 @@ export class KommoController {
           [fields.user_name, fields.user_email, fields.password, fields.domain]
         );
       }
-      return;
+      return { ok: true };
     } catch (error) {
       console.log("Erro ao cadastrar acesso do usuário:", error)
+      return { ok: false, message: 'Erro ao cadastrar o usuário.', error: error}
     }
   }
 

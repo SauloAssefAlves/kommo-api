@@ -15,6 +15,10 @@ const pool = new Pool({
   connectionTimeoutMillis: 2000, // Timeout para tentar nova conexão
 });
 
+pool.on('connect', (client) => {
+  client.query(`SET search_path TO widget, public`).catch(console.error);
+})
+
 // Função de consulta ao banco com tratamento de erro
 export const db = async (text: string, params?: any[]): Promise<any[]> => {
   const client = await pool.connect();

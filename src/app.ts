@@ -5,6 +5,7 @@ import portaisRoutes from "./routes/portaisRoutes.js";
 import clienteRoutes from "./routes/cliente.routes.js";
 import loginRoute from "./routes/auth.routes.js";
 import kommoRoute from "./routes/kommo.routers.js";
+import widget from "./routes/widget.routes.js";
 
 const app = express();
 
@@ -17,6 +18,8 @@ app.use("/tintimWebhook", tintimWebhookRoutes);
 app.use("/portais", portaisRoutes);
 app.use("/cliente", clienteRoutes);
 app.use("/kommo", kommoRoute);
+
+app.use("/widget", widget);
 
 app.post("/teste", (req, res) => {
   console.log("Query params:", req.query);
